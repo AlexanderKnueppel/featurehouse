@@ -27,6 +27,9 @@ import composer.rules.meta.FieldOverridingMeta;
 import composer.rules.meta.InvariantCompositionMeta;
 import composer.rules.meta.JavaMethodOverridingMeta;
 import composer.rules.meta.MinimalFeatureModelInfo;
+import composer.rules.metaUseContracts.ConstructorConcatenationMetaUseContracts;
+import composer.rules.metaUseContracts.ContractCompositionMetaUseContracts;
+import composer.rules.metaUseContracts.JavaMethodOverridingMetaUseContracts;
 import composer.rules.rtcomp.c.CRuntimeFeatureSelection;
 import composer.rules.rtcomp.c.CRuntimeFunctionRefinement;
 import composer.rules.rtcomp.c.CRuntimeReplacement;
@@ -45,15 +48,18 @@ public class FSTGenComposerExtension extends FSTGenComposer {
 	public static boolean key = false;
 	public static boolean metaproduct = false;
 	private FeatureModelInfo modelInfo = new MinimalFeatureModelInfo();
-	
+	public static boolean useContracts = false;
+	final String newVar;
 
 	public FSTGenComposerExtension() {
 		super();
+		newVar = "";
 	}
 
 	public FSTGenComposerExtension(FeatureModelInfo modelInfo) {
 		super();
 		this.modelInfo = modelInfo;
+		newVar = "";
 	}
 	
 	public void setModelInfo(FeatureModelInfo infoObject){
@@ -66,14 +72,22 @@ public class FSTGenComposerExtension extends FSTGenComposer {
 	 */
 	public void buildFullFST(String[] args, String[] featuresArg) {
 		metaproduct = false;
+		useContracts = false;
 		build(args, featuresArg, false);
 	}
 	
 	public void buildMetaProduct(String[] args, String[] featuresArg) {
+		buildMetaProduct(args, featuresArg, false);
+	}
+	
+	public void buildMetaProduct(String[] args, String[] featuresArg, boolean contracts){
 		metaproduct = true;
-		build(args, featuresArg, true);
+		useContracts = contracts;
+		build(args, featuresArg, true);	
+		
 	}
 
+	
 	private void build(String[] args, String[] featuresArg, boolean compose) {
 		meta.clearFeatures();
 		cmd.parseCmdLineArguments(args);
@@ -91,14 +105,27 @@ public class FSTGenComposerExtension extends FSTGenComposer {
 			}
 		} else {
 			compositionRules.add(new Replacement());
-			compositionRules.add(new JavaMethodOverridingMeta());
+			if (useContracts) {
+				compositionRules.add(new JavaMethodOverridingMetaUseContracts());
+			} else {
+				compositionRules.add(new JavaMethodOverridingMeta());
+			}
+			
 		}
-		compositionRules.add(new InvariantCompositionMeta());
-		compositionRules.add(new ContractCompositionMeta(cmd.contract_style,modelInfo));
+		if (useContracts) {
+			key = true;
+			compositionRules.add(new ContractCompositionMetaUseContracts(cmd.contract_style,modelInfo)); // <====================
+			compositionRules.add(new ConstructorConcatenationMetaUseContracts());
+		} else { 
+			compositionRules.add(new ContractCompositionMeta(cmd.contract_style,modelInfo));
+			compositionRules.add(new ConstructorConcatenationMeta()); 
+		}
+		compositionRules.add(new InvariantCompositionMeta()); 
+		
 		compositionRules.add(new StringConcatenation());
 		compositionRules.add(new ImplementsListMerging());
 		compositionRules.add(new CSharpMethodOverriding());
-		compositionRules.add(new ConstructorConcatenationMeta());
+		
 		compositionRules.add(new ModifierListSpecialization());
 		compositionRules.add(new FieldOverridingMeta());
 		compositionRules.add(new ExpansionOverriding());

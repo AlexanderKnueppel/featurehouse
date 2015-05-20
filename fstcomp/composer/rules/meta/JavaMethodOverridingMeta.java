@@ -17,10 +17,10 @@ import de.ovgu.cide.fstgen.ast.FSTTerminal;
  * @author Jens Meinicke
  *
  */
-public class JavaMethodOverridingMeta extends JavaMethodOverriding {
+public class JavaMethodOverridingMeta extends JavaMethodMeta {
 	
 	/**
-	 * TODO description
+	 * Composition of methods for metaproduct
 	 */
 	@Override
 	protected boolean replaceOriginal(FSTTerminal terminalA) {
@@ -48,12 +48,6 @@ public class JavaMethodOverridingMeta extends JavaMethodOverriding {
 		}
 	}
 	
-	public static String getFeatureName(FSTNode node) {
-		if (node.getType().equals("Feature"))
-			return node.getName().toLowerCase();
-		else
-			return getFeatureName(node.getParent());
-	}
 	
 	private void setNotFeature(FSTNode child, String featureName) {
 		FSTNonTerminal methodSpecification = (FSTNonTerminal)((FSTNonTerminal)child).getChildren().get(0);
@@ -102,40 +96,5 @@ public class JavaMethodOverridingMeta extends JavaMethodOverriding {
 				")\n\t\t\treturn original("+ parameterNames +");"));
 	}
 
-	private String getParameterNames(FSTTerminal terminalA) {
-		String parameter = terminalA.getBody().substring(
-				terminalA.getBody().indexOf('(') + 1, terminalA.getBody().indexOf(')')).trim();
-		String parameterNames = "";
-		String[] p = parameter.split("[,]");
-		for (int i = 0; i < p.length; i++) {
-			String[] split = p[i].trim().split("[ ]");
-			if (split.length < 2) {
-				continue;
-			}
-			parameterNames += split[split.length-1];
-			if (i < p.length - 1) {
-				parameterNames += ", ";
-			}
-		}
-		return parameterNames;
-	}
-
-	public String getReturnType(String body, String name) {
-		// remove @annotations
-		body = body.replaceAll("@\\w*\\W*", "");
-		// remove spaces between name and ()
-		body = body.replaceAll(name + "\\W*\\(", name + "(");
-		body =  body.substring(0, body.indexOf(name + "("));
-		body = body.split("[ ]")[body.split("[ ]").length -1];
-		body = body.replaceAll(" ", "");
-		if (body.equals("void")) {
-			return "";
-		}
-		return body;
-	}
-	
-	private String getLowFeatureName(FSTNode node) {
-		return getFeatureName(node).toLowerCase() + (FSTGenComposerExtension.key ? "" : "()");
-	}
 
 }
