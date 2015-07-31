@@ -128,7 +128,7 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 		ret.append("A;\n\t def ");
 		ret.append(placeholderName);
 		ret.append("A = ");
-		ret.append((assignable.length() != 0) ? assignable.toString() + "\n" : "\\everything\n");
+		ret.append((assignable.length() != 0) ? assignable.toString() + "\n" : "\\everything;\n");
 		//ret.append("\t@");
 
 		return ret.toString();
@@ -236,14 +236,23 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 			}
 		}
 
-		StringBuilder contractBody = new StringBuilder();
-		StringBuilder dispContractBody = new StringBuilder();
+		final Set<String> dispLocSet = new HashSet<>();
+		final StringBuilder assPostGen = new StringBuilder();
+		final StringBuilder contractBody = new StringBuilder();
+		final StringBuilder dispContractBody = new StringBuilder();
+		final String impliesFM = FM_FEATURE_MODEL + terminalA.getOriginalFeatureName().toLowerCase() + " ==> ";
+		
 		m = p.matcher(domBody);
 
 		if (m.find()) {
-			final String impliesFM = FM_FEATURE_MODEL + terminalA.getOriginalFeatureName().toLowerCase() + " ==> ";
 			int start = m.end();
 
+			dispContractBody.append("requires ");
+			dispContractBody.append("!" + impliesFM + "(");
+			dispContractBody.append(requiresDisp);
+			dispContractBody.append(")");
+			dispContractBody.append(delimiter);
+			
 			while (m.find()) {
 				final int end = m.start();
 				final String line = domBody.substring(start, end);
@@ -259,53 +268,70 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 						final String origRep = origA ? line.replace(ORIGINAL_KEYWORD, (reqAdd) ? requiresDisp.toString() : " true") : line;
 						dispContractBody.append("requires ");
 
-						if (first && origA && !modelInfo.isCoreFeature(getFeatureName(terminalB))) {
-							dispContractBody.append(impliesBFM);
-						} else if (!origA)
+//						if (first && origA && !modelInfo.isCoreFeature(getFeatureName(terminalB))) {
+//							dispContractBody.append(impliesBFM);
+//						} else if (!origA)
 							dispContractBody.append(impliesFM);
 						dispContractBody.append(origRep.substring("requires ".length()));
 					}
 					dispContractBody.append(delimiter);
 				} else if (line.startsWith("ensures")) {
-					final String origRep = origA ? line.replace(ORIGINAL_KEYWORD, (ensAdd) ? ensuresDisp.toString() : " true") : line;
+					final String origRep = line.replace(ORIGINAL_KEYWORD, (ensAdd) ? ensuresDisp.toString() : " true");
 					final String origDomRep = origA ? line.replace(ORIGINAL_KEYWORD, (ensDomAdd) ? ensuresDom.toString() : " true") : line;
 					contractBody.append(origDomRep);
 					contractBody.append(delimiter);
+					
 					dispContractBody.append("ensures ");
-					if (first && origA && !modelInfo.isCoreFeature(getFeatureName(terminalB))) {
-						dispContractBody.append(impliesBFM);
-					} else if (!origA)
-						dispContractBody.append(impliesFM);
+					dispContractBody.append(impliesFM);
+//					if (first && origA && !modelInfo.isCoreFeature(getFeatureName(terminalB))) {
+//						
+//					} else if (!origA)
+//						dispContractBody.append(impliesFM);
 					dispContractBody.append(origRep.substring("ensures ".length()));
 					dispContractBody.append(delimiter);
 				} else if (line.startsWith("assignable")) {
-					Collections.addAll(locSet, line.substring("assignable".length()).replace(" ", "").split(",\\s*"));
+					Collections.addAll(dispLocSet, line.substring("assignable".length()).replace(" ", "").split(",\\s*"));				
+					if (!locSet.contains("\\everything")) {
+						dispLocSet.removeAll(locSet);
+						dispLocSet.remove("\\nothing");
+						dispLocSet.remove("\\everything");
+						for (String el: dispLocSet) {	
+							assPostGen.append(" && (\\old(" + el + ") == " + el + ")");
+						}			
+					}
 				}
 				start = m.end();
 			}
 		}
+		dispContractBody.append("ensures ");
+		dispContractBody.append("!" + impliesFM + "(");
+		dispContractBody.append(ensuresDisp);
+		dispContractBody.append(assPostGen.toString());
+		dispContractBody.append(")");
+		dispContractBody.append(delimiter);
 
-		if (locSet.contains("\\everything")) {
+		
+		locSet.addAll(dispLocSet);
+		if (locSet.contains("\\everything") || locSet.isEmpty()) {
 			locSet.clear();
 			locSet.add("\\everything");
 		} else if (locSet.size() != 1) {
 			locSet.remove("\\nothing");
 		}
-
-		if (!locSet.isEmpty()) {
-			StringBuilder assignable = new StringBuilder("assignable ");
-			for (String el : locSet) {
-				if (!el.trim().isEmpty()) {
-					assignable.append(el);
-					assignable.append(",");
-				}
+	
+		StringBuilder assignable = new StringBuilder("assignable ");
+		for (String el : locSet) {
+			if (!el.trim().isEmpty()) {
+				assignable.append(el);
+				assignable.append(",");
 			}
-			String assignableC = assignable.toString().substring(0, assignable.length() - 1);
-			contractBody.append(assignableC + ";");
-			dispContractBody.append(assignableC + ";");
 		}
-
+		String assignableC = assignable.toString().substring(0, assignable.length() - 1);
+		contractBody.append(assignableC + ";");
+		dispContractBody.append(assignableC + ";");
+		
 		String dispBody = dispContractBody.toString();
+		
 		domBody = contractBody.toString();
 		if (first) {
 			domBody = "requires " + FM_FEATURE_MODEL + terminalB.getOriginalFeatureName().toLowerCase() + delimiter +
@@ -388,6 +414,7 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 		if (!body.endsWith("\r\n\t ")) {
 			body = body + "\r\n\t ";
 		}
+		body = "\tpublic normal_behaviour\n"  + body;
 		terminal.setBody(body);
 	}
 

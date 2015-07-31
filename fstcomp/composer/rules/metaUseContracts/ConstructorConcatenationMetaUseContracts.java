@@ -25,7 +25,7 @@ public class ConstructorConcatenationMetaUseContracts extends ConstructorConcate
 		term.setName(aName);
 		final String aParameterNames = getParameterNames(terminalA);
 		term.setBody(terminalA.getBody()
-				.replace(constrName.substring(0, constrName.indexOf("(")), "void " + firstNamePart + terminalA.getOriginalFeatureName()));
+				.replace(constrName.substring(0, constrName.indexOf("(")), "void /*@helper@*/ " + firstNamePart + terminalA.getOriginalFeatureName()));
 		terminalComp.getParent().getParent().addChild(parent);
 
 		boolean isFirstMerge = true;
@@ -42,7 +42,7 @@ public class ConstructorConcatenationMetaUseContracts extends ConstructorConcate
 			parentB.setName(bName);
 			termB.setName(bName);
 			termB.setBody(terminalB.getBody().replace(constrName.substring(0, constrName.indexOf("(")),
-					"void " + firstNamePart + terminalB.getOriginalFeatureName()));
+					"void /*@helper@*/ " + firstNamePart + terminalB.getOriginalFeatureName()));
 			terminalComp.getParent().getParent().addChild(parentB);
 
 			final String bParameterNames = getParameterNames(terminalB);
