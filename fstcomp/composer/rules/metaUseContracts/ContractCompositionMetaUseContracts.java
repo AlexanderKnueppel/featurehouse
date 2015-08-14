@@ -10,6 +10,7 @@ import composer.CompositionException;
 import composer.FSTGenComposerExtension;
 import composer.rules.ContractComposition;
 import composer.rules.meta.FeatureModelInfo;
+import composer.rules.meta.JavaMethodOverridingMeta;
 
 import de.ovgu.cide.fstgen.ast.FSTNode;
 import de.ovgu.cide.fstgen.ast.FSTNonTerminal;
@@ -81,14 +82,19 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 		if (clause.length() > 0) {
 			clause.append(" && ");
 		}
-		clause.append("(");
+		final String tmpClausString = clause.toString();
+		boolean multiples = tmpClausString.contains("||") || tmpClausString.contains("==>") || tmpClausString.contains("<==>");
+		if (multiples) {
+			clause.append("(");
+		}
 		clause.append(line.substring(line.indexOf(" ") + 1));
 		while (!line.endsWith(";")) {
 			line = contracts[++i].replace("@", "").trim();
 			clause.append(line);
 		}
-
-		clause.append(")");
+		if (multiples) {
+			clause.append(")");
+		}
 		return i;
 	}
 
@@ -129,7 +135,6 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 		ret.append(placeholderName);
 		ret.append("A = ");
 		ret.append((assignable.length() != 0) ? assignable.toString() + "\n" : "\\everything;\n");
-		//ret.append("\t@");
 
 		return ret.toString();
 	}
@@ -141,11 +146,24 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 		final boolean first = terminalB.getBody().startsWith("\\not_composed\r\n");
 		String oldDisp, oldDom = null;
 		
+		final FSTTerminal methodB = ((FSTTerminal) terminalB.getParent().getParent().getParent().getChildren().get(2));
+		final String methodName = methodB.getName().substring(0,methodB.getName().indexOf("("));
+		final String returnType = JavaMethodOverridingMetaUseContracts.getReturnType(methodB.getBody(), methodName);
+		String previousRefinementName = "";
 		if (first) {
 			terminalB.setBody(terminalB.getBody().replace("\\not_composed\r\n", ""));
 			oldDisp = terminalB.getBody();
 			oldDom = oldDisp;
 		} else {
+			
+			for (FSTNode child : terminalB.getParent().getParent().getParent().getParent().getChildren()) {
+				if (child.getName().contains("dispatch") && returnType.equals(JavaMethodOverridingMetaUseContracts.getReturnType(((FSTTerminal) ((FSTNonTerminal) child).getChildren().get(2)).getBody(),
+								methodName + "_" + terminalB.getOriginalFeatureName()))) {
+					previousRefinementName = "dispatch_" + methodName + "_" + terminalB.getOriginalFeatureName();
+					break;
+				}
+			}
+			
 			String[] bodies = terminalB.getBody().split(marker);
 			if (bodies.length == 2) {
 				oldDisp = bodies[1];
@@ -160,10 +178,13 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 			}
 		}
 
-		final String impliesBFM = FM_FEATURE_MODEL + terminalB.getOriginalFeatureName().toLowerCase() + " ==> ";
+		if (previousRefinementName.isEmpty()) {
+			previousRefinementName = methodName + "_" + terminalB.getOriginalFeatureName();
+		}
+		
 		StringBuilder ensuresDom = new StringBuilder(), requiresDom = new StringBuilder();
 		boolean reqDomAdd = false, ensDomAdd = false;
-
+		
 		if (oldDom != null) {
 			Matcher m = p.matcher(oldDom);
 			if (m.find()) {
@@ -246,47 +267,48 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 
 		if (m.find()) {
 			int start = m.end();
-
-			dispContractBody.append("requires ");
-			dispContractBody.append("!" + impliesFM + "(");
-			dispContractBody.append(requiresDisp);
-			dispContractBody.append(")");
-			dispContractBody.append(delimiter);
+			
+			if (requiresDisp.length() != 0) {
+				dispContractBody.append("requires ");
+				dispContractBody.append("!" + impliesFM + "(");
+				dispContractBody.append(requiresDisp);
+				dispContractBody.append(")");
+				dispContractBody.append(delimiter);
+			}
 			
 			while (m.find()) {
 				final int end = m.start();
 				final String line = domBody.substring(start, end);
 				final boolean origA = line.contains(ORIGINAL_KEYWORD);
+				final boolean origCallA = line.contains(ORIGINAL_CALL); 
 				if (line.startsWith("requires")) {
-					final String origDomRep = origA ? line.replace(ORIGINAL_KEYWORD, (reqDomAdd) ? requiresDom.toString() : " true") : line;
+					final String origDomRep = origA ? line.replace(ORIGINAL_KEYWORD, (reqDomAdd) ? requiresDom.toString() : 
+						" true") : 
+							line;
 					contractBody.append(origDomRep);
 					contractBody.append(delimiter);
 					final int reqOrInd = line.lastIndexOf(REQUIRE_OR_ORIGINAL);
 					if (reqOrInd >= 0) {
 						dispContractBody.append(line.substring(0, reqOrInd) + featureReq);
 					} else {
-						final String origRep = origA ? line.replace(ORIGINAL_KEYWORD, (reqAdd) ? requiresDisp.toString() : " true") : line;
+						String origRep = origA ? line.replace(ORIGINAL_KEYWORD, (reqAdd) ? requiresDisp.toString() : " true") : line;
+						origRep = origCallA ? origRep.replace(ORIGINAL_CALL, previousRefinementName + "(") : origRep;
 						dispContractBody.append("requires ");
-
-//						if (first && origA && !modelInfo.isCoreFeature(getFeatureName(terminalB))) {
-//							dispContractBody.append(impliesBFM);
-//						} else if (!origA)
-							dispContractBody.append(impliesFM);
+						dispContractBody.append(impliesFM);
 						dispContractBody.append(origRep.substring("requires ".length()));
 					}
 					dispContractBody.append(delimiter);
 				} else if (line.startsWith("ensures")) {
-					final String origRep = line.replace(ORIGINAL_KEYWORD, (ensAdd) ? ensuresDisp.toString() : " true");
-					final String origDomRep = origA ? line.replace(ORIGINAL_KEYWORD, (ensDomAdd) ? ensuresDom.toString() : " true") : line;
+					String origRep = line.replace(ORIGINAL_KEYWORD, (ensAdd) ? ensuresDisp.toString() : 
+						" true");
+					origRep  = origCallA ? origRep.replace(ORIGINAL_CALL, previousRefinementName + "(") : origRep;
+					String origDomRep = origA ? line.replace(ORIGINAL_KEYWORD, (ensDomAdd) ? ensuresDom.toString() : " true") : line;
+					origDomRep = origCallA ? origDomRep.replace(ORIGINAL_CALL, previousRefinementName + "(") : origDomRep;
 					contractBody.append(origDomRep);
 					contractBody.append(delimiter);
 					
 					dispContractBody.append("ensures ");
 					dispContractBody.append(impliesFM);
-//					if (first && origA && !modelInfo.isCoreFeature(getFeatureName(terminalB))) {
-//						
-//					} else if (!origA)
-//						dispContractBody.append(impliesFM);
 					dispContractBody.append(origRep.substring("ensures ".length()));
 					dispContractBody.append(delimiter);
 				} else if (line.startsWith("assignable")) {
@@ -303,13 +325,22 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 				start = m.end();
 			}
 		}
-		dispContractBody.append("ensures ");
-		dispContractBody.append("!" + impliesFM + "(");
-		dispContractBody.append(ensuresDisp);
-		dispContractBody.append(assPostGen.toString());
-		dispContractBody.append(")");
-		dispContractBody.append(delimiter);
-
+		
+		final boolean hasDisp = ensuresDisp.length() != 0;
+		final boolean newAss = assPostGen.length() != 0;
+		final boolean retIsNotVoid = !returnType.isEmpty();
+		
+		if (hasDisp || newAss || retIsNotVoid) {
+			dispContractBody.append("ensures ");
+			dispContractBody.append("!" + impliesFM + "(");
+			dispContractBody.append(ensuresDisp);
+			dispContractBody.append(!newAss || hasDisp ? assPostGen.toString() : assPostGen.toString().substring(4));
+			if (retIsNotVoid) {
+				dispContractBody.append((hasDisp || newAss ? " && " : "") + "\\old(" + previousRefinementName + "(" + JavaMethodOverridingMeta.getParameterNames(methodB) + ")) == \\result");
+			}
+			dispContractBody.append(")");
+			dispContractBody.append(delimiter);
+		}
 		
 		locSet.addAll(dispLocSet);
 		if (locSet.contains("\\everything") || locSet.isEmpty()) {
@@ -359,12 +390,17 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 			terminal.setBody("");
 			return;
 		}
+		
 		if (FSTGenComposerExtension.key && body.replaceAll("@", "").trim().isEmpty()) {
 			return;
 		}
-
+		
 		FSTNonTerminal nonT = (FSTNonTerminal) terminal.getParent().getParent().getParent();
 		final FSTTerminal fstTerminal = (FSTTerminal) nonT.getChildren().get(2);
+		
+		
+		System.out.println(fstTerminal.getCompositionMechanism() + ", ");
+		
 		String fstTBody = fstTerminal.getBody();
 		final int ind = fstTBody.indexOf("{") + 1;
 
@@ -372,6 +408,11 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 			//dispatch
 			String[] bodies = terminal.getBody().split(marker);
 			body = bodies.length == 2 ? bodies[1] : bodies[0];
+			if ("ConstructorConcatenation".equals(fstTerminal.getCompositionMechanism())) {
+				int contractStart = body.indexOf("/*@");
+				System.out.println("I got here." + fstTerminal.getName());
+				body = "\trequires %FM.%;\n" + body; 	
+			}
 			terminal.setBody(body);
 			body = transformIntoAbstractContract(terminal, true);
 		} else {
@@ -386,6 +427,10 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 				if (!body.contains(reqFeatName)) {
 					body = reqFeatName + delimiter + body;
 				}
+			}
+			if ("ConstructorConcatenation".equals(fstTerminal.getCompositionMechanism())) {
+				System.out.println("I got here." + fstTerminal.getName());
+				body = "\trequires %FM.%;\n" + body; 	
 			}
 			terminal.setBody(body);
 			
@@ -410,11 +455,12 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 
 		body = body.replaceAll("\r\n\t([\\w])", "\r\n\t $1");
 		body = body.replaceAll("\r\n\t([\\s]*)", "\r\n\t  @$1");
-
+		
 		if (!body.endsWith("\r\n\t ")) {
 			body = body + "\r\n\t ";
 		}
 		body = "\tpublic normal_behaviour\n"  + body;
+		
 		terminal.setBody(body);
 	}
 

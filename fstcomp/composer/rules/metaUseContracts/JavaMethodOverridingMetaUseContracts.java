@@ -54,8 +54,6 @@ public class JavaMethodOverridingMetaUseContracts extends JavaMethodMeta {
 			}
 		}
 		
-		
-
 		final String aParameterNames = getParameterNames(terminalA);
 		final String[] parameterNames = aParameterNames.split(", ");
 		final String[] parameterTypes = dispMethodTitle.substring(dispMethodTitle.indexOf("(") + 1).split("-");

@@ -41,7 +41,7 @@ import cide.gparser.*;
 import de.ovgu.cide.fstgen.ast.*;
 
 
-/**
+/** kalinkaka
  * Grammar to parse Java version 1.5
  * @author Sreenivasa Viswanadha - Simplified and enhanced for 1.5
  */
@@ -256,6 +256,7 @@ TOKEN :
 | < CONSTRAINT: "constraint" >
 | < CONSTRAINT_REDUNDANTLY: "constraint_redundantly" >
 | < EVERYTHING: "\\everything" >
+| < INV: "\\inv" >
 | < SUCH_THAT: "\\such_that" >
 | < REPRESENTS: "represents" >
 | < REPRESENTS_REDUNDANTLY: "represents_redundantly" >
@@ -1843,23 +1844,25 @@ FSTInfo JMLDeclaration(boolean inTerminal) : { Token first=null,t;FSTInfo n;
 } { {first=getToken(1); productionStart(inTerminal); } (
 	(n=Modifier(inTerminal){ replaceName(n);})* n=Invariant(inTerminal){ replaceName("Invariant", n);}{ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration1","{Invariant}","{Invariant}");}
  |
-	(n=Modifier(inTerminal){ replaceName(n);})* n=HistoryConstraint(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration2","{Invariant}","{Invariant}");}
+	(n=Modifier(inTerminal){ replaceName(n);})* n=AccessibleD(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration2","{Invariant}","{Invariant}");}
  |
-	(n=Modifier(inTerminal){ replaceName(n);})* n=RepresentsClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration3","{Invariant}","{Invariant}");}
+	(n=Modifier(inTerminal){ replaceName(n);})* n=HistoryConstraint(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration3","{Invariant}","{Invariant}");}
  |
-	(n=Modifier(inTerminal){ replaceName(n);})* n=InitiallyClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration4","{Invariant}","{Invariant}");}
+	(n=Modifier(inTerminal){ replaceName(n);})* n=RepresentsClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration4","{Invariant}","{Invariant}");}
  |
-	(n=Modifier(inTerminal){ replaceName(n);})* n=MonitorsForClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration5","{Invariant}","{Invariant}");}
+	(n=Modifier(inTerminal){ replaceName(n);})* n=InitiallyClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration5","{Invariant}","{Invariant}");}
  |
-	(n=Modifier(inTerminal){ replaceName(n);})* n=ReadableIfClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration6","{Invariant}","{Invariant}");}
+	(n=Modifier(inTerminal){ replaceName(n);})* n=MonitorsForClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration6","{Invariant}","{Invariant}");}
  |
-	(n=Modifier(inTerminal){ replaceName(n);})* n=WritableIfClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration7","{Invariant}","{Invariant}");}
+	(n=Modifier(inTerminal){ replaceName(n);})* n=ReadableIfClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration7","{Invariant}","{Invariant}");}
  |
-	(n=Modifier(inTerminal){ replaceName(n);})* n=AxiomClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration8","{Invariant}","{Invariant}");}
+	(n=Modifier(inTerminal){ replaceName(n);})* n=WritableIfClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration8","{Invariant}","{Invariant}");}
  |
-	(n=Modifier(inTerminal){ replaceName(n);})* n=DataGroupClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration9","{Invariant}","{Invariant}");}
+	(n=Modifier(inTerminal){ replaceName(n);})* n=AxiomClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration9","{Invariant}","{Invariant}");}
  |
-	(n=Modifier(inTerminal){ replaceName(n);})* n=MapsIntoClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration10","{Invariant}","{Invariant}");}
+	(n=Modifier(inTerminal){ replaceName(n);})* n=DataGroupClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration10","{Invariant}","{Invariant}");}
+ |
+	(n=Modifier(inTerminal){ replaceName(n);})* n=MapsIntoClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration11","{Invariant}","{Invariant}");}
 
  )  }
 
@@ -1970,6 +1973,12 @@ FSTInfo SpecArrayRefExpr(boolean inTerminal) : { Token first=null,t;FSTInfo n;
 FSTInfo Invariant(boolean inTerminal) : { Token first=null,t;FSTInfo n; 
 } { {first=getToken(1); productionStart(inTerminal); } (
 	n=InvariantKeyword(true){ replaceName(n);} n=Predicate(true){ replaceName("Predicate", n);}{ replaceName(n);} <SEMICOLON> {return productionEndTerminal("Invariant","{Predicate}","{Predicate}","InvariantComposition","Default",first,token);}
+
+ )  }
+
+FSTInfo AccessibleD(boolean inTerminal) : { Token first=null,t;FSTInfo n; 
+} { {first=getToken(1); productionStart(inTerminal); } (
+	n=ClassAccessibleKeyword(true){ replaceName(n);} n=StoreRefList(true){ replaceName(n);} <SEMICOLON> {return productionEndTerminal("AccessibleD","{AccessibleClauseD}","{AccessibleClauseD}","AccessibleComposition","Default",first,token);}
 
  )  }
 
@@ -2774,6 +2783,12 @@ FSTInfo InvariantKeyword(boolean inTerminal) : { Token first=null,t;FSTInfo n;
 	<INVARIANT> {return productionEndTerminal("InvariantKeyword1","-","-","Replacement","Default",first,token);}
  |
 	<INVARIANT_REDUNDANTLY> {return productionEndTerminal("InvariantKeyword2","-","-","Replacement","Default",first,token);}
+
+ )  }
+
+FSTInfo ClassAccessibleKeyword(boolean inTerminal) : { Token first=null,t;FSTInfo n; 
+} { {first=getToken(1); productionStart(inTerminal); } (
+	<ACCESSIBLE> <INV> <COLON> {return productionEndTerminal("ClassAccessibleKeyword","-","-","Replacement","Default",first,token);}
 
  )  }
 
