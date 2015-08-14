@@ -256,6 +256,7 @@ TOKEN :
 | < CONSTRAINT: "constraint" >
 | < CONSTRAINT_REDUNDANTLY: "constraint_redundantly" >
 | < EVERYTHING: "\\everything" >
+| < INV: "\\inv" >
 | < SUCH_THAT: "\\such_that" >
 | < REPRESENTS: "represents" >
 | < REPRESENTS_REDUNDANTLY: "represents_redundantly" >
@@ -1569,6 +1570,8 @@ JMLModifier:
 JMLDeclaration:
  (Modifier)* Invariant 
 |
+(Modifier)* AccessibleD 
+|
 (Modifier)* HistoryConstraint
 |
 (Modifier)* RepresentsClause
@@ -1639,6 +1642,9 @@ SpecArrayRefExpr: SpecExpression
 Invariant: InvariantKeyword Predicate <SEMICOLON>
 ;
 
+@FSTTerminal(name="{AccessibleClauseD}",compose="AccessibleComposition")
+AccessibleD: ClassAccessibleKeyword StoreRefList <SEMICOLON>
+;
 
 //JML
 //MethodSpecifications
@@ -2086,6 +2092,10 @@ AssumeKeyword:
 InvariantKeyword:
  <INVARIANT> 
 | <INVARIANT_REDUNDANTLY>
+;
+
+ClassAccessibleKeyword:
+ <ACCESSIBLE><INV><COLON>
 ;
 
 ColonExpression:

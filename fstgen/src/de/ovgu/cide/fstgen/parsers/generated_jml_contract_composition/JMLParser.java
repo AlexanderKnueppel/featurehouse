@@ -8,7 +8,7 @@ import cide.gparser.*;
 import de.ovgu.cide.fstgen.ast.*;
 
 
-/** kalinkaka
+/**
  * Grammar to parse Java version 1.5
  * @author Sreenivasa Viswanadha - Simplified and enhanced for 1.5
  */
