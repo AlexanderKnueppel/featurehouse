@@ -183,6 +183,19 @@ public class SimplePrintVisitor extends AbstractFSTPrintVisitor  {
 			printFeatures(nonTerminal,false);
 			return false;
 		}
+		if (nonTerminal.getType().equals("ClassOrInterfaceBodyDeclaration2")) {
+			printFeatures(nonTerminal,true);
+			printToken("/*@");
+			{
+				FSTNode v=getChild(nonTerminal, "ClassAccessible");
+				if (v!=null) {
+					v.accept(this);
+				}
+			}
+			printToken("@*/");
+			printFeatures(nonTerminal,false);
+			return false;
+		}
 		if (nonTerminal.getType().equals("InnerClassDecl")) {
 			printFeatures(nonTerminal,true);
 			{
@@ -458,7 +471,7 @@ public class SimplePrintVisitor extends AbstractFSTPrintVisitor  {
 				v.accept(this);
 			}
 			{
-				FSTNode v=getChild(nonTerminal, "AccessibleD");
+				FSTNode v=getChild(nonTerminal, "HistoryConstraint");
 				if (v!=null) {
 					v.accept(this);
 				}
@@ -472,7 +485,7 @@ public class SimplePrintVisitor extends AbstractFSTPrintVisitor  {
 				v.accept(this);
 			}
 			{
-				FSTNode v=getChild(nonTerminal, "HistoryConstraint");
+				FSTNode v=getChild(nonTerminal, "RepresentsClause");
 				if (v!=null) {
 					v.accept(this);
 				}
@@ -486,7 +499,7 @@ public class SimplePrintVisitor extends AbstractFSTPrintVisitor  {
 				v.accept(this);
 			}
 			{
-				FSTNode v=getChild(nonTerminal, "RepresentsClause");
+				FSTNode v=getChild(nonTerminal, "InitiallyClause");
 				if (v!=null) {
 					v.accept(this);
 				}
@@ -500,7 +513,7 @@ public class SimplePrintVisitor extends AbstractFSTPrintVisitor  {
 				v.accept(this);
 			}
 			{
-				FSTNode v=getChild(nonTerminal, "InitiallyClause");
+				FSTNode v=getChild(nonTerminal, "MonitorsForClause");
 				if (v!=null) {
 					v.accept(this);
 				}
@@ -514,7 +527,7 @@ public class SimplePrintVisitor extends AbstractFSTPrintVisitor  {
 				v.accept(this);
 			}
 			{
-				FSTNode v=getChild(nonTerminal, "MonitorsForClause");
+				FSTNode v=getChild(nonTerminal, "ReadableIfClause");
 				if (v!=null) {
 					v.accept(this);
 				}
@@ -528,7 +541,7 @@ public class SimplePrintVisitor extends AbstractFSTPrintVisitor  {
 				v.accept(this);
 			}
 			{
-				FSTNode v=getChild(nonTerminal, "ReadableIfClause");
+				FSTNode v=getChild(nonTerminal, "WritableIfClause");
 				if (v!=null) {
 					v.accept(this);
 				}
@@ -542,7 +555,7 @@ public class SimplePrintVisitor extends AbstractFSTPrintVisitor  {
 				v.accept(this);
 			}
 			{
-				FSTNode v=getChild(nonTerminal, "WritableIfClause");
+				FSTNode v=getChild(nonTerminal, "AxiomClause");
 				if (v!=null) {
 					v.accept(this);
 				}
@@ -556,20 +569,6 @@ public class SimplePrintVisitor extends AbstractFSTPrintVisitor  {
 				v.accept(this);
 			}
 			{
-				FSTNode v=getChild(nonTerminal, "AxiomClause");
-				if (v!=null) {
-					v.accept(this);
-				}
-			}
-			printFeatures(nonTerminal,false);
-			return false;
-		}
-		if (nonTerminal.getType().equals("JMLDeclaration10")) {
-			printFeatures(nonTerminal,true);
-			for (FSTNode v : getChildren(nonTerminal,"Modifier")) {
-				v.accept(this);
-			}
-			{
 				FSTNode v=getChild(nonTerminal, "DataGroupClause");
 				if (v!=null) {
 					v.accept(this);
@@ -578,7 +577,7 @@ public class SimplePrintVisitor extends AbstractFSTPrintVisitor  {
 			printFeatures(nonTerminal,false);
 			return false;
 		}
-		if (nonTerminal.getType().equals("JMLDeclaration11")) {
+		if (nonTerminal.getType().equals("JMLDeclaration10")) {
 			printFeatures(nonTerminal,true);
 			for (FSTNode v : getChildren(nonTerminal,"Modifier")) {
 				v.accept(this);
@@ -967,6 +966,7 @@ public class SimplePrintVisitor extends AbstractFSTPrintVisitor  {
 		if (type.equals("Modifier12") && expectedType.equals("Modifier")) return true;
 		if (type.equals("RelationalOp4") && expectedType.equals("RelationalOp")) return true;
 		if (type.equals("BlockStatement2") && expectedType.equals("BlockStatement")) return true;
+		if (type.equals("ClassOrInterfaceBodyDeclaration2") && expectedType.equals("ClassOrInterfaceBodyDeclaration")) return true;
 		if (type.equals("Statement19") && expectedType.equals("Statement")) return true;
 		if (type.equals("PrimarySuffix7") && expectedType.equals("PrimarySuffix")) return true;
 		if (type.equals("JMLDeclaration4") && expectedType.equals("JMLDeclaration")) return true;
@@ -1089,7 +1089,6 @@ public class SimplePrintVisitor extends AbstractFSTPrintVisitor  {
 		if (type.equals("EnsuresKeyword1") && expectedType.equals("EnsuresKeyword")) return true;
 		if (type.equals("RepresentsKeyword2") && expectedType.equals("RepresentsKeyword")) return true;
 		if (type.equals("StoreRefKeyword2") && expectedType.equals("StoreRefKeyword")) return true;
-		if (type.equals("JMLDeclaration11") && expectedType.equals("JMLDeclaration")) return true;
 		if (type.equals("JMLAnnotationStatement3") && expectedType.equals("JMLAnnotationStatement")) return true;
 		if (type.equals("JMLDeclaration10") && expectedType.equals("JMLDeclaration")) return true;
 		if (type.equals("JmlPrimary17") && expectedType.equals("JmlPrimary")) return true;
@@ -1129,6 +1128,7 @@ public class SimplePrintVisitor extends AbstractFSTPrintVisitor  {
 		if (type.equals("ArrayDimsAndInits1") && expectedType.equals("ArrayDimsAndInits")) return true;
 		if (type.equals("JmlPrimary15") && expectedType.equals("JmlPrimary")) return true;
 		if (type.equals("CastExpression2") && expectedType.equals("CastExpression")) return true;
+		if (type.equals("JmlPrimary27") && expectedType.equals("JmlPrimary")) return true;
 		if (type.equals("EqualityOp1") && expectedType.equals("EqualityOp")) return true;
 		if (type.equals("PrimaryPrefix5") && expectedType.equals("PrimaryPrefix")) return true;
 		if (type.equals("ContractCompKeyList1") && expectedType.equals("ContractCompKeyList")) return true;

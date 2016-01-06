@@ -257,6 +257,7 @@ TOKEN :
 | < CONSTRAINT_REDUNDANTLY: "constraint_redundantly" >
 | < EVERYTHING: "\\everything" >
 | < INV: "\\inv" >
+| < DISJOINT: "\\disjoint" >
 | < SUCH_THAT: "\\such_that" >
 | < REPRESENTS: "represents" >
 | < REPRESENTS_REDUNDANTLY: "represents_redundantly" >
@@ -529,8 +530,6 @@ TOKEN :
   < RUNSIGNEDSHIFT: ">>>" >
 | < RSIGNEDSHIFT: ">>" >
 | < GT: ">" >
-| <INF_DESC_START: "(*" >
-| <INF_DESC_END: "*)" >
 }
 FSTInfo OriginalClauseKeyword(boolean inTerminal) : { Token first=null,t;FSTInfo n; 
 } { {first=getToken(1); productionStart(inTerminal); } (
@@ -600,31 +599,31 @@ FSTInfo Modifiers2(boolean inTerminal) : { Token first=null,t;FSTInfo n;
 
 FSTInfo Modifier(boolean inTerminal) : { Token first=null,t;FSTInfo n; 
 } { {first=getToken(1); productionStart(inTerminal); } (
-	"public"  {return productionEndTerminal("Modifier1","-","-","Replacement","Default",first,token);}
+	"public"  {return productionEndTerminal("Modifier1","{AUTO}","{AUTO}","Replacement","Default",first,token);}
  |
-	"static"  {return productionEndTerminal("Modifier2","-","-","Replacement","Default",first,token);}
+	"static"  {return productionEndTerminal("Modifier2","{AUTO}","{AUTO}","Replacement","Default",first,token);}
  |
-	"protected"  {return productionEndTerminal("Modifier3","-","-","Replacement","Default",first,token);}
+	"protected"  {return productionEndTerminal("Modifier3","{AUTO}","{AUTO}","Replacement","Default",first,token);}
  |
-	"private"  {return productionEndTerminal("Modifier4","-","-","Replacement","Default",first,token);}
+	"private"  {return productionEndTerminal("Modifier4","{AUTO}","{AUTO}","Replacement","Default",first,token);}
  |
-	"final"  {return productionEndTerminal("Modifier5","-","-","Replacement","Default",first,token);}
+	"final"  {return productionEndTerminal("Modifier5","{AUTO}","{AUTO}","Replacement","Default",first,token);}
  |
-	"abstract"  {return productionEndTerminal("Modifier6","-","-","Replacement","Default",first,token);}
+	"abstract"  {return productionEndTerminal("Modifier6","{AUTO}","{AUTO}","Replacement","Default",first,token);}
  |
-	"synchronized"  {return productionEndTerminal("Modifier7","-","-","Replacement","Default",first,token);}
+	"synchronized"  {return productionEndTerminal("Modifier7","{AUTO}","{AUTO}","Replacement","Default",first,token);}
  |
-	"native"  {return productionEndTerminal("Modifier8","-","-","Replacement","Default",first,token);}
+	"native"  {return productionEndTerminal("Modifier8","{AUTO}","{AUTO}","Replacement","Default",first,token);}
  |
-	"transient"  {return productionEndTerminal("Modifier9","-","-","Replacement","Default",first,token);}
+	"transient"  {return productionEndTerminal("Modifier9","{AUTO}","{AUTO}","Replacement","Default",first,token);}
  |
-	"volatile"  {return productionEndTerminal("Modifier10","-","-","Replacement","Default",first,token);}
+	"volatile"  {return productionEndTerminal("Modifier10","{AUTO}","{AUTO}","Replacement","Default",first,token);}
  |
-	"strictfp"  {return productionEndTerminal("Modifier11","-","-","Replacement","Default",first,token);}
+	"strictfp"  {return productionEndTerminal("Modifier11","{AUTO}","{AUTO}","Replacement","Default",first,token);}
  |
-	n=Annotation(true){ replaceName(n);} {return productionEndTerminal("Modifier12","-","-","Replacement","Default",first,token);}
+	n=Annotation(true){ replaceName(n);} {return productionEndTerminal("Modifier12","{AUTO}","{AUTO}","Replacement","Default",first,token);}
  |
-	n=JMLModifier(true){ replaceName(n);} {return productionEndTerminal("Modifier13","-","-","Replacement","Default",first,token);}
+	n=JMLModifier(true){ replaceName(n);} {return productionEndTerminal("Modifier13","{AUTO}","{AUTO}","Replacement","Default",first,token);}
 
  )  }
 
@@ -731,6 +730,8 @@ FSTInfo ClassOrInterfaceBody(boolean inTerminal) : { Token first=null,t;FSTInfo 
 FSTInfo ClassOrInterfaceBodyDeclaration(boolean inTerminal) : { Token first=null,t;FSTInfo n; 
 } { {first=getToken(1); productionStart(inTerminal); } (
 	LOOKAHEAD(JMLDeclaration()) n=JMLDeclaration(inTerminal){ replaceName(n);} {return productionEndNonTerminal("ClassOrInterfaceBodyDeclaration1","{AUTO}","{AUTO}");}
+ |
+	LOOKAHEAD(ClassAccessible()) n=ClassAccessible(inTerminal){ replaceName(n);} {return productionEndNonTerminal("ClassOrInterfaceBodyDeclaration2","CAccessibleC","CAccessibleC");}
  |
 	LOOKAHEAD(2) n=Initializer(true){ replaceName(n);} {return productionEndTerminal("InitializerDecl","{AUTO}","{AUTO}","Replacement","Default",first,token);}
  |
@@ -1844,25 +1845,29 @@ FSTInfo JMLDeclaration(boolean inTerminal) : { Token first=null,t;FSTInfo n;
 } { {first=getToken(1); productionStart(inTerminal); } (
 	(n=Modifier(inTerminal){ replaceName(n);})* n=Invariant(inTerminal){ replaceName("Invariant", n);}{ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration1","{Invariant}","{Invariant}");}
  |
-	(n=Modifier(inTerminal){ replaceName(n);})* n=AccessibleD(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration2","{Invariant}","{Invariant}");}
+	(n=Modifier(inTerminal){ replaceName(n);})* n=HistoryConstraint(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration2","{Invariant}","{Invariant}");}
  |
-	(n=Modifier(inTerminal){ replaceName(n);})* n=HistoryConstraint(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration3","{Invariant}","{Invariant}");}
+	(n=Modifier(inTerminal){ replaceName(n);})* n=RepresentsClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration3","{Invariant}","{Invariant}");}
  |
-	(n=Modifier(inTerminal){ replaceName(n);})* n=RepresentsClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration4","{Invariant}","{Invariant}");}
+	(n=Modifier(inTerminal){ replaceName(n);})* n=InitiallyClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration4","{Invariant}","{Invariant}");}
  |
-	(n=Modifier(inTerminal){ replaceName(n);})* n=InitiallyClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration5","{Invariant}","{Invariant}");}
+	(n=Modifier(inTerminal){ replaceName(n);})* n=MonitorsForClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration5","{Invariant}","{Invariant}");}
  |
-	(n=Modifier(inTerminal){ replaceName(n);})* n=MonitorsForClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration6","{Invariant}","{Invariant}");}
+	(n=Modifier(inTerminal){ replaceName(n);})* n=ReadableIfClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration6","{Invariant}","{Invariant}");}
  |
-	(n=Modifier(inTerminal){ replaceName(n);})* n=ReadableIfClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration7","{Invariant}","{Invariant}");}
+	(n=Modifier(inTerminal){ replaceName(n);})* n=WritableIfClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration7","{Invariant}","{Invariant}");}
  |
-	(n=Modifier(inTerminal){ replaceName(n);})* n=WritableIfClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration8","{Invariant}","{Invariant}");}
+	(n=Modifier(inTerminal){ replaceName(n);})* n=AxiomClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration8","{Invariant}","{Invariant}");}
  |
-	(n=Modifier(inTerminal){ replaceName(n);})* n=AxiomClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration9","{Invariant}","{Invariant}");}
+	(n=Modifier(inTerminal){ replaceName(n);})* n=DataGroupClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration9","{Invariant}","{Invariant}");}
  |
-	(n=Modifier(inTerminal){ replaceName(n);})* n=DataGroupClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration10","{Invariant}","{Invariant}");}
- |
-	(n=Modifier(inTerminal){ replaceName(n);})* n=MapsIntoClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration11","{Invariant}","{Invariant}");}
+	(n=Modifier(inTerminal){ replaceName(n);})* n=MapsIntoClause(inTerminal){ replaceName(n);} {return productionEndNonTerminal("JMLDeclaration10","{Invariant}","{Invariant}");}
+
+ )  }
+
+FSTInfo ClassAccessible(boolean inTerminal) : { Token first=null,t;FSTInfo n; 
+} { {first=getToken(1); productionStart(inTerminal); } (
+	(n=Modifier(true){ replaceName(n);})* n=ClassAccessibleKeyword(true){ replaceName(n);} n=StoreRefList(true){ replaceName(n);} <SEMICOLON> {return productionEndTerminal("ClassAccessible","{ClassAccessibleClause}","{ClassAccessibleClause}","ClassAccessibleComposition","Default",first,token);}
 
  )  }
 
@@ -1972,13 +1977,7 @@ FSTInfo SpecArrayRefExpr(boolean inTerminal) : { Token first=null,t;FSTInfo n;
 
 FSTInfo Invariant(boolean inTerminal) : { Token first=null,t;FSTInfo n; 
 } { {first=getToken(1); productionStart(inTerminal); } (
-	n=InvariantKeyword(true){ replaceName(n);} n=Predicate(true){ replaceName("Predicate", n);}{ replaceName(n);} <SEMICOLON> {return productionEndTerminal("Invariant","{Predicate}","{Predicate}","InvariantComposition","Default",first,token);}
-
- )  }
-
-FSTInfo AccessibleD(boolean inTerminal) : { Token first=null,t;FSTInfo n; 
-} { {first=getToken(1); productionStart(inTerminal); } (
-	n=ClassAccessibleKeyword(true){ replaceName(n);} n=StoreRefList(true){ replaceName(n);} <SEMICOLON> {return productionEndTerminal("AccessibleD","{AccessibleClauseD}","{AccessibleClauseD}","AccessibleComposition","Default",first,token);}
+	n=InvariantKeyword(true){ replaceName(n);} n=Predicate(true){ replaceName(n);} <SEMICOLON> {return productionEndTerminal("Invariant","{AUTO}","{AUTO}","InvariantComposition","Default",first,token);}
 
  )  }
 
@@ -3116,11 +3115,13 @@ FSTInfo JmlPrimary(boolean inTerminal) : { Token first=null,t;FSTInfo n;
  |
 	LOOKAHEAD(InvariantForExpression()) n=InvariantForExpression(true){ replaceName(n);} {return productionEndTerminal("JmlPrimary23","-","-","Replacement","Default",first,token);}
  |
-	LOOKAHEAD(LblnegExpression()) n=LblnegExpression(true){ replaceName(n);} {return productionEndTerminal("JmlPrimary24","-","-","Replacement","Default",first,token);}
+	LOOKAHEAD(DisjointForExpression()) n=DisjointForExpression(true){ replaceName(n);} {return productionEndTerminal("JmlPrimary24","-","-","Replacement","Default",first,token);}
  |
-	LOOKAHEAD(LblposExpression()) n=LblposExpression(true){ replaceName(n);} {return productionEndTerminal("JmlPrimary25","-","-","Replacement","Default",first,token);}
+	LOOKAHEAD(LblnegExpression()) n=LblnegExpression(true){ replaceName(n);} {return productionEndTerminal("JmlPrimary25","-","-","Replacement","Default",first,token);}
  |
-	LOOKAHEAD(SpecQuantifiedExpr()) n=SpecQuantifiedExpr(true){ replaceName(n);} {return productionEndTerminal("JmlPrimary26","-","-","Replacement","Default",first,token);}
+	LOOKAHEAD(LblposExpression()) n=LblposExpression(true){ replaceName(n);} {return productionEndTerminal("JmlPrimary26","-","-","Replacement","Default",first,token);}
+ |
+	LOOKAHEAD(SpecQuantifiedExpr()) n=SpecQuantifiedExpr(true){ replaceName(n);} {return productionEndTerminal("JmlPrimary27","-","-","Replacement","Default",first,token);}
 
  )  }
 
@@ -3258,6 +3259,12 @@ FSTInfo InvariantForExpression(boolean inTerminal) : { Token first=null,t;FSTInf
 
  )  }
 
+FSTInfo DisjointForExpression(boolean inTerminal) : { Token first=null,t;FSTInfo n; 
+} { {first=getToken(1); productionStart(inTerminal); } (
+	<DISJOINT> <LPAREN> n=StoreRefExpression(true){ replaceName(n);} <COMMA> n=StoreRefExpression(true){ replaceName(n);} <RPAREN> {return productionEndTerminal("DisjointForExpression","-","-","Replacement","Default",first,token);}
+
+ )  }
+
 FSTInfo LblnegExpression(boolean inTerminal) : { Token first=null,t;FSTInfo n; 
 } { {first=getToken(1); productionStart(inTerminal); } (
 	<LPAREN> <LBLNEG> n=Id(true){ replaceName(n);} n=SpecExpression(true){ replaceName(n);} <RPAREN> {return productionEndTerminal("LblnegExpression","-","-","Replacement","Default",first,token);}
@@ -3320,7 +3327,7 @@ FSTInfo ReferenceType(boolean inTerminal) : { Token first=null,t;FSTInfo n;
 
 FSTInfo InformalDescription(boolean inTerminal) : { Token first=null,t;FSTInfo n; 
 } { {first=getToken(1); productionStart(inTerminal); } (
-	<INF_DESC_START> n=NonStarsClose(true){ replaceName(n);} (n=NonStarsClose(true){ replaceName(n);})* <INF_DESC_END> {return productionEndTerminal("InformalDescription","-","-","Replacement","Default",first,token);}
+	<LPAREN> <STAR> n=NonStarsClose(true){ replaceName(n);} (n=NonStarsClose(true){ replaceName(n);})* <STAR> <RPAREN> {return productionEndTerminal("InformalDescription","-","-","Replacement","Default",first,token);}
 
  )  }
 

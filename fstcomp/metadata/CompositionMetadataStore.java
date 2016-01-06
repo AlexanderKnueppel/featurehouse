@@ -13,17 +13,13 @@ import de.ovgu.cide.fstgen.ast.FSTNonTerminal;
 import de.ovgu.cide.fstgen.ast.FSTTerminal;
 
 /**
- * 
- * @author Hendrik Speidel <speidel@fim.uni-passau.de>
- *
  * stores meta data about functions.
  * 
- * Stored info:
- * 
- *  -order that features are composed
- * 	-which feature introduced a particular function
+ * Stored info:</br>
+ * &emsp; - order that features are composed </br>
+ * &emsp; - which feature introduced a particular function </br>
  *  
- *
+ * @author  <a href="mailto:speidel@fim.uni-passau.de">Hendrik Speidel </a>
  */
 public final class CompositionMetadataStore {
 	

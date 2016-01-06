@@ -6832,15 +6832,15 @@ public class JavaJMLParser extends AbstractFSTParser implements JavaJMLParserCon
     return false;
   }
 
-  final private boolean jj_3R_98() {
-    if (jj_3R_65()) return true;
-    return false;
-  }
-
   final private boolean jj_3_39() {
     if (jj_scan_token(LBRACKET)) return true;
     if (jj_3R_81()) return true;
     if (jj_scan_token(RBRACKET)) return true;
+    return false;
+  }
+
+  final private boolean jj_3R_98() {
+    if (jj_3R_65()) return true;
     return false;
   }
 

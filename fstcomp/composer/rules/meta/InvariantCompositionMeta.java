@@ -8,7 +8,7 @@ import de.ovgu.cide.fstgen.ast.FSTNonTerminal;
 import de.ovgu.cide.fstgen.ast.FSTTerminal;
 
 /**
- * TODO description
+ * Composition of invariants for metaproduct.
  * @author Jens Meinicke
  *
  */

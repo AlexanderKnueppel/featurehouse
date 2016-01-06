@@ -20,6 +20,7 @@ import composer.rules.ImplementsListMerging;
 import composer.rules.ModifierListSpecialization;
 import composer.rules.Replacement;
 import composer.rules.StringConcatenation;
+import composer.rules.meta.AccessibleCompositionMeta;
 import composer.rules.meta.ConstructorConcatenationMeta;
 import composer.rules.meta.ContractCompositionMeta;
 import composer.rules.meta.FeatureModelInfo;
@@ -110,7 +111,6 @@ public class FSTGenComposerExtension extends FSTGenComposer {
 			} else {
 				compositionRules.add(new JavaMethodOverridingMeta());
 			}
-			
 		}
 		if (useContracts) {
 			key = true;
@@ -120,7 +120,8 @@ public class FSTGenComposerExtension extends FSTGenComposer {
 			compositionRules.add(new ContractCompositionMeta(cmd.contract_style,modelInfo));
 			compositionRules.add(new ConstructorConcatenationMeta()); 
 		}
-		compositionRules.add(new InvariantCompositionMeta()); 
+		compositionRules.add(new InvariantCompositionMeta());
+		compositionRules.add(new AccessibleCompositionMeta());
 		
 		compositionRules.add(new StringConcatenation());
 		compositionRules.add(new ImplementsListMerging());
