@@ -114,7 +114,7 @@ public class FSTGenComposerExtension extends FSTGenComposer {
 		}
 		if (useContracts) {
 			key = true;
-			compositionRules.add(new ContractCompositionMetaUseContracts(cmd.contract_style,modelInfo)); // <====================
+			compositionRules.add(new ContractCompositionMetaUseContracts(cmd.contract_style,modelInfo));
 			compositionRules.add(new ConstructorConcatenationMetaUseContracts());
 		} else { 
 			compositionRules.add(new ContractCompositionMeta(cmd.contract_style,modelInfo));

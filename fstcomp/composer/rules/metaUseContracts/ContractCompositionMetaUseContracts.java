@@ -403,7 +403,7 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 
 		final int ind = fstTBody.indexOf("{") + 1;
 
-		final String resultEQOldEnsures = ENSURES + " \\\\result == \\\\old(" + methodName + LBRACE + params + RBRACE + RBRACE + SEMICOLON + NEWLINE + TAB + ENSURES + WS;
+		//final String resultEQOldEnsures = ENSURES + " \\\\result == \\\\old(" + methodName + LBRACE + params + RBRACE + RBRACE + SEMICOLON + NEWLINE + TAB + ENSURES + WS;
 		final String FeatureModelPlaceHolder = TAB + REQUIRES + WS + FeatureModelMarker + SEMICOLON + NEWLINE;
 		if (fstTBody.charAt(ind) == JavaMethodOverridingMetaUseContracts.domDispMethodMarker) {
 			//dispatch
@@ -412,7 +412,7 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 			if (CONSTRUCTOR_CONCATENATION.equals(fstTerminal.getCompositionMechanism())) {
 				body = FeatureModelPlaceHolder + body;
 			} else if (!returnType.isEmpty() && methodName.startsWith(DISPATCH_)) {
-				body = body.replaceFirst(ENSURES + WS, resultEQOldEnsures);
+			//	body = body.replaceFirst(ENSURES + WS, resultEQOldEnsures);
 			}
 			body = body.replace(assMarker, "");
 			terminal.setBody(body);
@@ -435,7 +435,7 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 					body = domainCor[0];
 				}
 				if (!returnType.isEmpty()) {
-					body = body.replaceFirst(ENSURES + WS, resultEQOldEnsures);
+					//body = body.replaceFirst(ENSURES + WS, resultEQOldEnsures);
 				}
 			} else {
 				//Constructor
@@ -451,6 +451,7 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 			terminal.setBody(body);
 			body = transformIntoAbstractContract(terminal, false);
 		}
+		
 
 		body = body.replace(" || " + REQUIRE_OR_ORIGINAL, "");
 		body = body.replace(FINAL_CONTRACT, "");
@@ -570,4 +571,6 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 		return ret.toString();
 	}
 
+	
+	
 }
