@@ -15,6 +15,8 @@ import de.ovgu.cide.fstgen.ast.FSTTerminal;
 
 public class JavaMethodOverriding extends AbstractCompositionRule {
 
+	public String WRAPPEE = "__wrappee__";
+
 	private static boolean addFeatureAnnotations = false;
 
 	public static final String featureAnnotationPrefix = "@featureHouse.FeatureAnnotation(name=\"";
@@ -95,7 +97,7 @@ public class JavaMethodOverriding extends AbstractCompositionRule {
 			}
 
 			String toReplace = "original\\s*\\(";
-			String newMethodName = oldMethodName + "__wrappee__"
+			String newMethodName = oldMethodName + WRAPPEE
 					+ (terminalB.getOriginalFeatureName());
 			String newBody = getNewBody(terminalA, terminalB, terminalComp,
 					oldMethodName).replaceAll(toReplace, newMethodName + "(");

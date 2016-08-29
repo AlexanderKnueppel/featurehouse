@@ -41,7 +41,6 @@ import composer.FSTGenComposerExtension;
 import composer.rules.ContractComposition;
 import composer.rules.meta.FeatureModelInfo;
 import composer.rules.meta.JavaMethodMeta;
-
 import de.ovgu.cide.fstgen.ast.FSTNode;
 import de.ovgu.cide.fstgen.ast.FSTNonTerminal;
 import de.ovgu.cide.fstgen.ast.FSTTerminal;
@@ -56,6 +55,7 @@ import de.ovgu.cide.fstgen.ast.FSTTerminal;
 public class ContractCompositionMetaUseContracts extends ContractComposition {
 
 	private FeatureModelInfo modelInfo;
+	private boolean hasDispatcherMethods;
 	private static final String delimiter = SEMICOLON + NEWLINE;
 
 	private static final String domMarker = " ## ";
@@ -66,13 +66,14 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 	private static final Pattern keywordPattern = Pattern.compile("(^|;)[^(requires|ensures|assignable)]*");
 	private static final Pattern featurePattern = Pattern.compile("([(]|[\\s])*FM[.]FeatureModel[.]");
 
-	public ContractCompositionMetaUseContracts(final String contract_style) {
-		super(contract_style);
-	}
-
 	public ContractCompositionMetaUseContracts(final String contract_style, final FeatureModelInfo model) {
+		this(contract_style, model, true);
+	}
+	
+	public ContractCompositionMetaUseContracts(final String contract_style, final FeatureModelInfo model, boolean hasDisp) {
 		super(contract_style);
 		modelInfo = model;
+		hasDispatcherMethods = hasDisp;
 	}
 
 	/**
@@ -403,16 +404,16 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 
 		final int ind = fstTBody.indexOf("{") + 1;
 
-		final String resultEQOldEnsures = ENSURES + " \\\\result == \\\\old(" + methodName + LBRACE + params + RBRACE + RBRACE + SEMICOLON + NEWLINE + TAB + ENSURES + WS;
+		//final String resultEQOldEnsures = ENSURES + " \\\\result == \\\\old(" + methodName + LBRACE + params + RBRACE + RBRACE + SEMICOLON + NEWLINE + TAB + ENSURES + WS;
 		final String FeatureModelPlaceHolder = TAB + REQUIRES + WS + FeatureModelMarker + SEMICOLON + NEWLINE;
-		if (fstTBody.charAt(ind) == JavaMethodOverridingMetaUseContracts.domDispMethodMarker) {
+		if (!hasDispatcherMethods || fstTBody.charAt(ind) == JavaMethodOverridingMetaUseContracts.domDispMethodMarker) {
 			//dispatch
 			final String[] bodies = terminal.getBody().split(domDispContractmarker);
 			body = bodies.length == 2 ? bodies[1] : bodies[0];
 			if (CONSTRUCTOR_CONCATENATION.equals(fstTerminal.getCompositionMechanism())) {
 				body = FeatureModelPlaceHolder + body;
 			} else if (!returnType.isEmpty() && methodName.startsWith(DISPATCH_)) {
-				body = body.replaceFirst(ENSURES + WS, resultEQOldEnsures);
+				//body = body.replaceFirst(ENSURES + WS, resultEQOldEnsures);
 			}
 			body = body.replace(assMarker, "");
 			terminal.setBody(body);
@@ -435,7 +436,7 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 					body = domainCor[0];
 				}
 				if (!returnType.isEmpty()) {
-					body = body.replaceFirst(ENSURES + WS, resultEQOldEnsures);
+					//body = body.replaceFirst(ENSURES + WS, resultEQOldEnsures);
 				}
 			} else {
 				//Constructor

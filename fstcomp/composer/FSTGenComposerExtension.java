@@ -7,11 +7,9 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
-import printer.PrintVisitorException;
 import builder.ArtifactBuilderInterface;
 import builder.capprox.CApproxBuilder;
 import builder.java.JavaBuilder;
-
 import composer.rules.CSharpMethodOverriding;
 import composer.rules.CompositionError;
 import composer.rules.CompositionRule;
@@ -37,12 +35,12 @@ import composer.rules.rtcomp.c.CRuntimeReplacement;
 import composer.rules.rtcomp.java.JavaRuntimeFeatureSelection;
 import composer.rules.rtcomp.java.JavaRuntimeFunctionRefinement;
 import composer.rules.rtcomp.java.JavaRuntimeReplacement;
-
 import counter.Counter;
 import de.ovgu.cide.fstgen.ast.AbstractFSTParser;
 import de.ovgu.cide.fstgen.ast.FSTNode;
 import de.ovgu.cide.fstgen.ast.FSTNonTerminal;
 import de.ovgu.cide.fstgen.ast.FSTTerminal;
+import printer.PrintVisitorException;
 
 public class FSTGenComposerExtension extends FSTGenComposer {
 	
@@ -50,6 +48,7 @@ public class FSTGenComposerExtension extends FSTGenComposer {
 	public static boolean metaproduct = false;
 	private FeatureModelInfo modelInfo = new MinimalFeatureModelInfo();
 	public static boolean useContracts = false;
+	public static boolean dispMethods = false;
 	final String newVar;
 
 	public FSTGenComposerExtension() {
@@ -82,10 +81,14 @@ public class FSTGenComposerExtension extends FSTGenComposer {
 	}
 	
 	public void buildMetaProduct(String[] args, String[] featuresArg, boolean contracts){
+		buildMetaProduct(args, featuresArg, contracts, true);
+	}
+	
+	public void buildMetaProduct(String[] args, String[] featuresArg, boolean contracts, boolean hasDispMethods){
 		metaproduct = true;
 		useContracts = contracts;
+		dispMethods = hasDispMethods;
 		build(args, featuresArg, true);	
-		
 	}
 
 	
@@ -106,15 +109,21 @@ public class FSTGenComposerExtension extends FSTGenComposer {
 			}
 		} else {
 			compositionRules.add(new Replacement());
-			if (useContracts) {
+			if (useContracts && dispMethods) {
 				compositionRules.add(new JavaMethodOverridingMetaUseContracts());
 			} else {
-				compositionRules.add(new JavaMethodOverridingMeta());
+				JavaMethodOverridingMeta methodOverriding = new JavaMethodOverridingMeta();
+				methodOverriding.WRAPPEE = "_";
+				compositionRules.add(methodOverriding);
 			}
 		}
 		if (useContracts) {
 			key = true;
-			compositionRules.add(new ContractCompositionMetaUseContracts(cmd.contract_style,modelInfo)); // <====================
+			if (dispMethods){
+				compositionRules.add(new ContractCompositionMetaUseContracts(cmd.contract_style,modelInfo, dispMethods));
+			} else {
+				compositionRules.add(new ContractCompositionMetaUseContracts(cmd.contract_style, modelInfo, dispMethods));
+			}
 			compositionRules.add(new ConstructorConcatenationMetaUseContracts());
 		} else { 
 			compositionRules.add(new ContractCompositionMeta(cmd.contract_style,modelInfo));
