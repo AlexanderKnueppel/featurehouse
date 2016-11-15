@@ -341,9 +341,23 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 			}
 		}
 		final String assignableC = assignable.toString().substring(0, assignable.length() - 1) + SEMICOLON;
-		contractBody.append(assignableC);
+
 		dispContractBody.append(assignableC);
 
+		if (methodB.getBody().contains(ORIGINAL_CALL)) {
+			contractBody.append(assignableC);
+		} else {
+			final StringBuilder assignableDom = new StringBuilder(ASSIGNABLE + WS);
+			tmpLocSet.removeAll(locSet);
+			for (final String el : tmpLocSet) {
+				if (!el.trim().isEmpty()) {
+					assignableDom.append(el);
+					assignableDom.append(COMMA);
+				}
+			}
+			contractBody.append(assignableDom.toString().substring(0, assignableDom.length() - 1) + SEMICOLON);
+		}
+		
 		final String dispBody = dispContractBody.toString();
 
 		domBody = contractBody.toString();
