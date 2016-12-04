@@ -21,17 +21,14 @@
         <javaElement handleIdentifier="=fstcomp/&lt;modification.content"/>
         <javaElement handleIdentifier="=fstcomp/&lt;builder.javacc"/>
         <javaElement handleIdentifier="=fstcomp/&lt;composer.rules"/>
-        <file path="/fstmerge/.classpath"/>
         <javaElement handleIdentifier="=fstcomp/&lt;builder.xmi"/>
         <javaElement handleIdentifier="=fstgen/test"/>
-        <javaElement handleIdentifier="=fstmerge/&lt;builder.csharpm"/>
         <javaElement handleIdentifier="=fstcomp/&lt;printer.javacc"/>
         <javaElement handleIdentifier="=fstcomp/&lt;modification.content.Parseables"/>
         <javaElement handleIdentifier="=fstcomp/&lt;printer.java"/>
         <javaElement handleIdentifier="=fstcomp/&lt;builder.fj"/>
         <javaElement handleIdentifier="=fstcomp/&lt;printer.binary"/>
         <javaElement handleIdentifier="=fstcomp/&lt;printer.sdf"/>
-        <javaElement handleIdentifier="=fstmerge/&lt;builder.textm"/>
         <javaElement handleIdentifier="=fstcomp/&lt;printer.asmetal"/>
         <javaElement handleIdentifier="=fstcomp/&lt;printer.xml"/>
         <javaElement handleIdentifier="=fstcomp/&lt;builder.binary"/>
@@ -47,13 +44,10 @@
         <javaElement handleIdentifier="=fstcomp/&lt;printer.haskell"/>
         <javaElement handleIdentifier="=fstcomp/&lt;builder.csharp"/>
         <javaElement handleIdentifier="=fstcomp/&lt;modification.traversalLanguageParser"/>
-        <javaElement handleIdentifier="=fstmerge/&lt;builder.javam"/>
         <javaElement handleIdentifier="=fstcomp/&lt;builder.sdf"/>
         <javaElement handleIdentifier="=fstcomp/&lt;builder.xml"/>
         <javaElement handleIdentifier="=fstcomp/&lt;printer.csharp"/>
-        <javaElement handleIdentifier="=fstmerge/&lt;merger"/>
         <javaElement handleIdentifier="=fstcomp/&lt;modification.content.Parseables.haskell"/>
-        <javaElement handleIdentifier="=fstmerge/&lt;printer.textm"/>
         <javaElement handleIdentifier="=fstcomp/&lt;builder.java"/>
         <javaElement handleIdentifier="=fstcomp/&lt;modification.content.Parseables.SDF"/>
         <javaElement handleIdentifier="=fstcomp/&lt;printer.fj"/>
@@ -63,13 +57,8 @@
         <javaElement handleIdentifier="=fstcomp/&lt;modification.content.Parseables.java"/>
         <javaElement handleIdentifier="=fstcomp/&lt;builder"/>
         <javaElement handleIdentifier="=fstcomp/&lt;counter"/>
-        <javaElement handleIdentifier="=fstmerge/&lt;jargs.gnu"/>
         <file path="/fstgen/.cvsignore"/>
         <javaElement handleIdentifier="=fstcomp/&lt;printer.xmi"/>
-        <javaElement handleIdentifier="=fstmerge/&lt;builder.pythonm"/>
-        <javaElement handleIdentifier="=fstmerge/&lt;printer.csharpm"/>
-        <file path="/fstmerge/.project"/>
-        <javaElement handleIdentifier="=fstmerge/&lt;printer.javam"/>
         <javaElement handleIdentifier="=fstcomp/&lt;modification.xmlParser"/>
         <javaElement handleIdentifier="=fstcomp/&lt;printer.jcop"/>
         <javaElement handleIdentifier="=fstgen/src"/>
@@ -81,7 +70,6 @@
         <javaElement handleIdentifier="=CIDE2_ast/src"/>
         <javaElement handleIdentifier="=fstcomp/&lt;metadata"/>
         <javaElement handleIdentifier="=fstcomp/&lt;builder.str"/>
-        <javaElement handleIdentifier="=fstmerge/&lt;printer.pythonm"/>
         <javaElement handleIdentifier="=fstcomp/&lt;builder.capprox"/>
         <javaElement handleIdentifier="=fstcomp/&lt;modification"/>
     </selectedElements>

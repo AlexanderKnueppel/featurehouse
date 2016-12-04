@@ -46,7 +46,8 @@ import de.ovgu.cide.fstgen.ast.FSTNonTerminal;
 import de.ovgu.cide.fstgen.ast.FSTTerminal;
 
 /**
- * Contract composition for metaproduct desgined to use contracts instead of method inlining during theorem proving
+ * Contract composition for metaproduct desgined to use contracts instead of
+ * method inlining during theorem proving
  * 
  * @author Stefan Krueger
  * @author Sebastian Krieter
@@ -62,14 +63,14 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 	private static final String domDispContractmarker = " ### ";
 	private static final String assMarker = "#####";
 	private static final String FeatureModelMarker = "%FM.%";
-	
+
 	private static final Pattern keywordPattern = Pattern.compile("(^|;)[^(requires|ensures|assignable)]*");
 	private static final Pattern featurePattern = Pattern.compile("([(]|[\\s])*FM[.]FeatureModel[.]");
 
 	public ContractCompositionMetaUseContracts(final String contract_style, final FeatureModelInfo model) {
 		this(contract_style, model, true);
 	}
-	
+
 	public ContractCompositionMetaUseContracts(final String contract_style, final FeatureModelInfo model, boolean hasDisp) {
 		super(contract_style);
 		modelInfo = model;
@@ -77,28 +78,32 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 	}
 
 	/**
-	 * Calculates the name of the feature-state for a given {@link FSTNode} below the feature-node (without "FeatureModel.")
+	 * Calculates the name of the feature-state for a given {@link FSTNode}
+	 * below the feature-node (without "FeatureModel.")
 	 * 
-	 * @param node the {@link FSTNOde}
+	 * @param node
+	 *            the {@link FSTNOde}
 	 * @return name of the selection-state of the feature
 	 */
 	private static String getFeatureState(final FSTNode node) {
 		return JavaMethodMeta.getFeatureName(node).toLowerCase() + (FSTGenComposerExtension.key ? "" : "()");
 	}
-	
+
 	@Override
 	public void preCompose(final FSTTerminal terminal) {
 		terminal.setBody(NOT_COMPOSED + NEWLINE + TAB
-			+ ((modelInfo.isCoreFeature(JavaMethodMeta.getFeatureName(terminal))) 
-				? "" 
-				: REQUIRES + WS + FM_MODEL + getFeatureState(terminal) + OR_WS + REQUIRE_OR_ORIGINAL + SEMICOLON + NEWLINE + TAB) 
-			+ terminal.getBody());
+				+ ((modelInfo.isCoreFeature(JavaMethodMeta.getFeatureName(terminal))) ? ""
+						: REQUIRES + WS + FM_MODEL + getFeatureState(terminal) + OR_WS + REQUIRE_OR_ORIGINAL + SEMICOLON + NEWLINE + TAB)
+				+ terminal.getBody());
 	}
 
 	@Override
-	public void compose(final FSTTerminal terminalA, final FSTTerminal terminalB, final FSTTerminal terminalComp, final FSTNonTerminal nonterminalParent)
-			throws CompositionException {
+	public void compose(final FSTTerminal terminalA, final FSTTerminal terminalB, final FSTTerminal terminalComp,
+			final FSTNonTerminal nonterminalParent) throws CompositionException {
+		// Removes NOT_COMPOSED marker
 		markAsComposed(terminalA);
+
+		
 		
 		// Do not compose if contract empty
 		if (equalsFeatureReq(terminalA) && equalsFeatureReq(terminalB)) {
@@ -108,31 +113,39 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 
 		String oldDisp = null, oldDom = null;
 		final FSTTerminal methodB = (FSTTerminal) terminalB.getParent().getParent().getParent().getChildren().get(FST_METHOD_INDEX);
+
+		// General method signature
 		final String methodName = getMethodName(methodB);
 		final String returnType = JavaMethodMeta.getReturnType(methodB.getBody(), methodName);
-		final String bFeatureName = terminalB.getOriginalFeatureName();
-		String previousRefinementName = methodName + _ + bFeatureName;
-		
-		// Usually, terminalB == last Composition result. During first composition, terminalB == contract of introductory feature.  
+		final String featureNameB = terminalB.getOriginalFeatureName();
+
+		String refinementName = methodName + _ + featureNameB;
+
+		// Usually, terminalB == last composition result. During first
+		// composition, terminalB == contract of introductory feature.
 		final boolean first = !terminalHasDomainMethod(terminalB);
 		if (first) {
-			//If first composition, no previous dispatcher method => terminalB used as dispatcher contract and domain contract.
+			// If first composition, no previous dispatcher method => terminalB
+			// used as dispatcher contract and domain contract.
 			markAsComposed(terminalB);
 			oldDisp = terminalB.getBody();
 			oldDom = oldDisp;
 		} else {
-			// Check whether there is already a dispatcher method with the "same" name. If so, update variable holding name ofprevious refinement.
+			// Check whether there is already a dispatcher method with the
+			// "same" name. If so, update variable holding name of previous
+			// refinement.
 			final List<FSTNode> terminalBClassElements = terminalB.getParent().getParent().getParent().getParent().getChildren();
 			for (final FSTNode child : terminalBClassElements) {
-				if (child.getName().contains(DISPATCH)
-						&& returnType.equals(JavaMethodMeta.getReturnType(((FSTTerminal) ((FSTNonTerminal) child).getChildren().get(FST_METHOD_INDEX)).getBody(), methodName + _
-								+ bFeatureName))) {
-					previousRefinementName = DISPATCH_ + previousRefinementName;
+				if (child.getName().contains(DISPATCH) && returnType.equals(
+						JavaMethodMeta.getReturnType(((FSTTerminal) ((FSTNonTerminal) child).getChildren().get(FST_METHOD_INDEX)).getBody(),
+								methodName + _ + featureNameB))) {
+					refinementName = DISPATCH_ + refinementName;
 					break;
 				}
 			}
 
-			// Decomposition of body according to marker. For composition, see end of method.
+			// Decomposition of body according to marker. For composition, see
+			// end of method.
 			final String[] bodies = terminalB.getBody().split(domDispContractmarker);
 			if (bodies.length == 2) {
 				oldDom = bodies[0];
@@ -146,12 +159,14 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 				oldDom = "";
 			}
 		}
-		
-		// Collect requires and ensures clauses from previous domain method for new doman and dispatcher method.
-		// These clauses are only used when contract (terminalA) contains keyword \original.
+
+		// Collect requires and ensures clauses from previous domain method for
+		// new doman and dispatcher method.
+		// These clauses are only used when contract (terminalA) contains
+		// keyword \original.
 		String domBody = terminalA.getBody();
 		StringBuilder ensuresDom = null, requiresDom = null;
-		final String bFeatureNameLow = bFeatureName.toLowerCase();
+		final String bFeatureNameLow = featureNameB.toLowerCase();
 		final String impliesBFM = FM_MODEL + bFeatureNameLow + IMPLICATION_WS;
 		if (oldDom != null && domBody.contains(ORIGINAL_KEYWORD)) {
 			final Matcher m = keywordPattern.matcher(oldDom);
@@ -163,7 +178,7 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 					final int end = m.start();
 					final String line = oldDom.substring(start, end);
 					final boolean featurePatternFound = featurePattern.matcher(line).find();
-					if (line.startsWith(REQUIRES) && !line.toLowerCase().contains((FM_MODEL + bFeatureName).toLowerCase())) {
+					if (line.startsWith(REQUIRES) && !line.toLowerCase().contains((FM_MODEL + featureNameB).toLowerCase())) {
 						appendClause(requiresDom, impliesBFM, line.substring(REQUIRES.length()), featurePatternFound);
 					} else if (line.startsWith(ENSURES)) {
 						appendClause(ensuresDom, impliesBFM, line.substring(ENSURES.length()), featurePatternFound);
@@ -172,8 +187,9 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 				}
 			}
 		}
-		
-		// Collect requires, ensures, and assignable clauses from previous dispatcher method for new dispatcher method.
+
+		// Collect requires, ensures, and assignable clauses from previous
+		// dispatcher method for new dispatcher method.
 		Matcher m = keywordPattern.matcher(oldDisp);
 		Set<String> locSet = new HashSet<>();
 		final StringBuilder ensuresDisp = new StringBuilder(), requiresDisp = new StringBuilder();
@@ -194,23 +210,28 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 				} else if (line.startsWith(ENSURES)) {
 					appendClause(ensuresDisp, impliesBFM, line.substring(ENSURES.length()), featurePatternFound);
 				} else if (line.startsWith(ASSIGNABLE)) {
-					Collections.addAll(locSet, line.substring(ASSIGNABLE.length()).split(REGEX_COMMA_WS));
+					final String[] split = line.substring(ASSIGNABLE.length()).split(REGEX_COMMA_WS);
+					for (String el : split) {
+						locSet.add(el.trim());
+					}
 				}
 				start = m.end();
 			}
 		}
 
-		// Build requires, ensures, and assignable clauses for new domain and dispatcher methods.
+		// Build requires, ensures, and assignable clauses for new domain and
+		// dispatcher methods.
 		Set<String> dispLocSet = new HashSet<>();
 		final StringBuilder contractBody = new StringBuilder();
 		final StringBuilder dispContractBody = new StringBuilder();
 		final String impliesFM = FM_MODEL + terminalA.getOriginalFeatureName().toLowerCase() + IMPLICATION_WS;
-		
+
 		m = keywordPattern.matcher(domBody);
 		if (m.find()) {
 			int start = m.end();
 
-			// Adds clauses to dispatcher method contract for when feature of terminalB is not selected.
+			// Adds clauses to dispatcher method contract for when feature of
+			// terminalB is not selected.
 			if (requiresDisp.length() != 0) {
 				dispContractBody.append(REQUIRES);
 				dispContractBody.append(WS);
@@ -223,46 +244,59 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 			}
 
 			while (m.find()) {
-				
+
 				final String dispatchKeywordIfFirst = first ? "" : DISPATCH_;
 				final int end = m.start();
 				final String line = domBody.substring(start, end);
 				final boolean origA = line.contains(ORIGINAL_KEYWORD);
 				final boolean origCallA = line.contains(ORIGINAL_CALL);
-				
+
 				if (line.startsWith(REQUIRES)) {
-					final String origDomRep = origA ? line.replace(ORIGINAL_KEYWORD, (requiresDom != null && requiresDom.length() > 0) ? LBRACE + requiresDom.toString() + RBRACE : TRUE) : line;
+					final String origDomRep = origA
+							? line.replace(ORIGINAL_KEYWORD,
+									(requiresDom != null && requiresDom.length() > 0) ? LBRACE + requiresDom.toString() + RBRACE : TRUE)
+							: line;
 					contractBody.append(origDomRep);
 					contractBody.append(delimiter);
-					
+
 					final int reqOrInd = line.lastIndexOf(REQUIRE_OR_ORIGINAL);
 					if (reqOrInd >= 0) {
 						dispContractBody.append(line.substring(0, reqOrInd) + featureReq);
 					} else {
-						String origRep = origA ? line.replace(ORIGINAL_KEYWORD, (requiresDisp.length() > 0) ? LBRACE + requiresDisp.toString() + RBRACE : TRUE) : line;
-						origRep = origCallA ? origRep.replace(ORIGINAL_CALL, dispatchKeywordIfFirst + previousRefinementName + LBRACE) : origRep;
+						String origRep = origA ? line.replace(ORIGINAL_KEYWORD,
+								(requiresDisp.length() > 0) ? LBRACE + requiresDisp.toString() + RBRACE : TRUE) : line;
+						origRep = origCallA ? origRep.replace(ORIGINAL_CALL, dispatchKeywordIfFirst + refinementName + LBRACE)
+								: origRep;
 						appendFullClause(dispContractBody, REQUIRES, impliesFM, origA, origRep);
 					}
-					
+
 					dispContractBody.append(delimiter);
 				} else if (line.startsWith(ENSURES)) {
-					String origRep = origA ? line.replace(ORIGINAL_KEYWORD, (ensuresDisp.length() > 0) ? LBRACE + ensuresDisp.toString() + RBRACE : TRUE) : line;
-					origRep = origCallA ? origRep.replace(ORIGINAL_CALL, dispatchKeywordIfFirst + previousRefinementName + LBRACE) : origRep;
-					
-					String origDomRep = origA ? line.replace(ORIGINAL_KEYWORD, (ensuresDom != null && ensuresDom.length() > 0) ? LBRACE + ensuresDom.toString() + RBRACE : TRUE) : line;
-					origDomRep = origCallA ? origDomRep.replace(ORIGINAL_CALL, dispatchKeywordIfFirst + previousRefinementName + LBRACE) : origDomRep;
-					
+					String origRep = origA
+							? line.replace(ORIGINAL_KEYWORD, (ensuresDisp.length() > 0) ? LBRACE + ensuresDisp.toString() + RBRACE : TRUE)
+							: line;
+					origRep = origCallA ? origRep.replace(ORIGINAL_CALL, dispatchKeywordIfFirst + refinementName + LBRACE)
+							: origRep;
+
+					String origDomRep = origA
+							? line.replace(ORIGINAL_KEYWORD,
+									(ensuresDom != null && ensuresDom.length() > 0) ? LBRACE + ensuresDom.toString() + RBRACE : TRUE)
+							: line;
+					origDomRep = origCallA ? origDomRep.replace(ORIGINAL_CALL, dispatchKeywordIfFirst + refinementName + LBRACE)
+							: origDomRep;
+
 					contractBody.append(origDomRep);
 					contractBody.append(delimiter);
-					
+
 					appendFullClause(dispContractBody, ENSURES, impliesFM, origA, origRep);
 					dispContractBody.append(delimiter);
 				} else if (line.startsWith(ASSIGNABLE)) {
-					Collections.addAll(dispLocSet, line.substring(ASSIGNABLE.length()).split(REGEX_COMMA_WS));
-					if (!locSet.contains(EVERYTHING)) {
+					final String[] split = line.substring(ASSIGNABLE.length()).split(REGEX_COMMA_WS);
+					for (String el : split) {
+						dispLocSet.add(el.trim());
+					}
+					if (!locSet.contains(EVERYTHING) && !locSet.contains(NOTHING)) {
 						dispLocSet.removeAll(locSet);
-						dispLocSet.remove(NOTHING);
-						dispLocSet.remove(EVERYTHING);
 						final Set<String> tmpLocSet = new HashSet<>();
 						for (final String el : dispLocSet) {
 							dispContractBody.append(ENSURES);
@@ -279,7 +313,7 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 							dispContractBody.append(RBRACE);
 							dispContractBody.append(delimiter);
 
-							tmpLocSet.add(assMarker + el);
+							tmpLocSet.add(assMarker + el.trim());
 						}
 						dispLocSet = tmpLocSet;
 					}
@@ -318,14 +352,22 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 				contractBody.append(RBRACE);
 				contractBody.append(RBRACE);
 				contractBody.append(delimiter);
-				tmpLocSet.add(el.substring(assMarker.length()));
+				tmpLocSet.add(el.substring(assMarker.length()).trim());
 			} else {
-				tmpLocSet.add(el);
+				tmpLocSet.add(el.trim());
 			}
 
 		}
-		locSet = tmpLocSet;
-		locSet.addAll(dispLocSet);
+		locSet = new HashSet<>(tmpLocSet);
+		tmpLocSet.clear();
+		for (String string : dispLocSet) {
+			String trimmedEl = string.substring(assMarker.length()).trim();
+			if (!(trimmedEl.equals(NOTHING) || trimmedEl.equals(EVERYTHING))) {
+				locSet.add(trimmedEl);
+			}
+			tmpLocSet.add(trimmedEl);
+			
+		}
 		if (locSet.contains(EVERYTHING) || locSet.isEmpty()) {
 			locSet.clear();
 			locSet.add(EVERYTHING);
@@ -335,41 +377,46 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 
 		final StringBuilder assignable = new StringBuilder(ASSIGNABLE + WS);
 		for (final String el : locSet) {
-			if (!el.trim().isEmpty()) {
-				assignable.append(el);
+			String trimmedl = el.trim();
+			if (!trimmedl.isEmpty()) {
+				assignable.append(trimmedl);
 				assignable.append(COMMA);
+				assignable.append(WS);
 			}
 		}
-		final String assignableC = assignable.toString().substring(0, assignable.length() - 1) + SEMICOLON;
+		final String assignableC = assignable.toString().substring(0, assignable.length() - 2) + SEMICOLON;
 
 		dispContractBody.append(assignableC);
 
-		if (methodB.getBody().contains(ORIGINAL_CALL)) {
+		Boolean origKeywordinA = terminalA.getBody().contains(ORIGINAL_KEYWORD);
+		if (origKeywordinA) {
 			contractBody.append(assignableC);
 		} else {
 			final StringBuilder assignableDom = new StringBuilder(ASSIGNABLE + WS);
-			tmpLocSet.removeAll(locSet);
+
 			for (final String el : tmpLocSet) {
-				if (!el.trim().isEmpty()) {
-					assignableDom.append(el);
+				String trimmedel = el.trim();
+				if (!trimmedel.isEmpty()) {
+					assignableDom.append(trimmedel);
 					assignableDom.append(COMMA);
+					assignableDom.append(WS);
 				}
 			}
-			contractBody.append(assignableDom.toString().substring(0, assignableDom.length() - 1) + SEMICOLON);
+			contractBody.append(assignableDom.toString().substring(0, assignableDom.length() - 2) + SEMICOLON);
 		}
-		
+
 		final String dispBody = dispContractBody.toString();
 
 		domBody = contractBody.toString();
 		if (first) {
-			domBody = REQUIRES + WS + FM_MODEL + bFeatureNameLow + delimiter + oldDisp + domMarker + bFeatureName + domMarker
-					+ domBody;
+			domBody = REQUIRES + WS + FM_MODEL + bFeatureNameLow + delimiter + oldDisp + domMarker + featureNameB + domMarker + domBody;
 		}
 
 		terminalComp.setBody(domBody + domDispContractmarker + dispBody);
 	}
 
-	private void appendFullClause(final StringBuilder dispContractBody, final String keyword, final String impliesFM, final boolean origA, String origRep) {
+	private void appendFullClause(final StringBuilder dispContractBody, final String keyword, final String impliesFM, final boolean origA,
+			String origRep) {
 		final String keywordWS = keyword + WS;
 		dispContractBody.append(keywordWS);
 		dispContractBody.append(LBRACE);
@@ -394,7 +441,8 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 
 	private boolean equalsFeatureReq(final FSTTerminal terminal) {
 		final String body = terminal.getBody();
-		return body != null && (body.isEmpty() || body.trim().equals(REQUIRES + WS + FM_MODEL + terminal.getOriginalFeatureName().toLowerCase() + OR_WS + REQUIRE_OR_ORIGINAL + SEMICOLON));
+		return body != null && (body.isEmpty() || body.trim().equals(
+				REQUIRES + WS + FM_MODEL + terminal.getOriginalFeatureName().toLowerCase() + OR_WS + REQUIRE_OR_ORIGINAL + SEMICOLON));
 	}
 
 	@Override
@@ -418,16 +466,18 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 
 		final int ind = fstTBody.indexOf("{") + 1;
 
-		//final String resultEQOldEnsures = ENSURES + " \\\\result == \\\\old(" + methodName + LBRACE + params + RBRACE + RBRACE + SEMICOLON + NEWLINE + TAB + ENSURES + WS;
+		// final String resultEQOldEnsures = ENSURES + " \\\\result == \\\\old("
+		// + methodName + LBRACE + params + RBRACE + RBRACE + SEMICOLON +
+		// NEWLINE + TAB + ENSURES + WS;
 		final String FeatureModelPlaceHolder = TAB + REQUIRES + WS + FeatureModelMarker + SEMICOLON + NEWLINE;
 		if (!hasDispatcherMethods || fstTBody.charAt(ind) == JavaMethodOverridingMetaUseContracts.domDispMethodMarker) {
-			//dispatch
+			// dispatch
 			final String[] bodies = terminal.getBody().split(domDispContractmarker);
 			body = bodies.length == 2 ? bodies[1] : bodies[0];
 			if (CONSTRUCTOR_CONCATENATION.equals(fstTerminal.getCompositionMechanism())) {
 				body = FeatureModelPlaceHolder + body;
 			} else if (!returnType.isEmpty() && methodName.startsWith(DISPATCH_)) {
-				//body = body.replaceFirst(ENSURES + WS, resultEQOldEnsures);
+				// body = body.replaceFirst(ENSURES + WS, resultEQOldEnsures);
 			}
 			body = body.replace(assMarker, "");
 			terminal.setBody(body);
@@ -435,7 +485,7 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 
 		} else {
 			if (body.contains(domDispContractmarker)) {
-				//domain				
+				// domain
 				final String[] bodies = terminal.getBody().split(domDispContractmarker);
 				final String domain = bodies[0];
 				final String[] domainCor = domain.split(domMarker);
@@ -450,10 +500,11 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 					body = domainCor[0];
 				}
 				if (!returnType.isEmpty()) {
-					//body = body.replaceFirst(ENSURES + WS, resultEQOldEnsures);
+					// body = body.replaceFirst(ENSURES + WS,
+					// resultEQOldEnsures);
 				}
 			} else {
-				//Constructor
+				// Constructor
 				final String reqFeatName = REQUIRES + WS + FM_MODEL + terminal.getOriginalFeatureName().toLowerCase();
 				if (!body.contains(reqFeatName)) {
 					body = reqFeatName + delimiter + body;
@@ -500,9 +551,10 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 			clause.append(AND_WS);
 		}
 		final String cleanedLine = line.substring(line.indexOf(WS) + 1);
-		final boolean setBrackets = (!(cleanedLine.contains(FM_MODEL) || cleanedLine.contains(REQUIRE_OR_ORIGINAL)) && cleanedLine.contains(WS))
-				|| (cleanedLine.contains(FM_MODEL) && (cleanedLine.indexOf(FM_MODEL) != cleanedLine.lastIndexOf(FM_MODEL)) && (cleanedLine.contains("==>") || cleanedLine
-						.contains("||")));
+		final boolean setBrackets = (!(cleanedLine.contains(FM_MODEL) || cleanedLine.contains(REQUIRE_OR_ORIGINAL))
+				&& cleanedLine.contains(WS))
+				|| (cleanedLine.contains(FM_MODEL) && (cleanedLine.indexOf(FM_MODEL) != cleanedLine.lastIndexOf(FM_MODEL))
+						&& (cleanedLine.contains("==>") || cleanedLine.contains("||")));
 		if (setBrackets) {
 			clause.append(LBRACE);
 		}
@@ -524,13 +576,17 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 	}
 
 	/**
-	 * Removes clause with disjunction of selection states from specification body
+	 * Removes clause with disjunction of selection states from specification
+	 * body
 	 * 
-	 * @param body specification body
+	 * @param body
+	 *            specification body
 	 * @return specification body without disjunction of selection states
 	 */
 	private String removeRequireOrOriginal(final String body) {
-		return body.replaceAll("requires FM.FeatureModel.[\\w]+" + (FSTGenComposerExtension.key ? "" : "\\(\\)") + " \\|\\| " + REQUIRE_OR_ORIGINAL + ";", "");
+		return body.replaceAll(
+				"requires FM.FeatureModel.[\\w]+" + (FSTGenComposerExtension.key ? "" : "\\(\\)") + " \\|\\| " + REQUIRE_OR_ORIGINAL + ";",
+				"");
 	}
 
 	private boolean terminalHasDomainMethod(final FSTTerminal terminal) {
@@ -560,8 +616,9 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 		}
 
 		final String methodName = contract.getParent().getParent().getParent().getName();
-		final String placeholderName = !methodName.contains(LBRACE) ? methodName : ((dispatch) ? DISPATCH_ : "") + methodName.substring(0, methodName.indexOf(LBRACE)) + _
-				+ contract.getOriginalFeatureName();
+		final String placeholderName = !methodName.contains(LBRACE) ? methodName
+				: ((dispatch) ? DISPATCH_ : "") + methodName.substring(0, methodName.indexOf(LBRACE)) + _
+						+ contract.getOriginalFeatureName();
 		final StringBuilder ret = new StringBuilder();
 		ret.append("\t requires_abs ");
 		ret.append(placeholderName);
