@@ -361,7 +361,7 @@ public class ContractCompositionMetaUseContracts extends ContractComposition {
 		locSet = new HashSet<>(tmpLocSet);
 		tmpLocSet.clear();
 		for (String string : dispLocSet) {
-			String trimmedEl = string.substring(assMarker.length()).trim();
+			String trimmedEl = (string.contains(assMarker)) ? string.substring(assMarker.length()).trim() : string.trim();
 			if (!(trimmedEl.equals(NOTHING) || trimmedEl.equals(EVERYTHING))) {
 				locSet.add(trimmedEl);
 			}
