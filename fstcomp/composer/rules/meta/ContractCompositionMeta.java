@@ -29,6 +29,7 @@ import de.ovgu.cide.fstgen.ast.FSTTerminal;
  * @author Matthias Praast
  * 
  */
+//XXX Dots (.) need to be escaped in regexes
 public class ContractCompositionMeta extends ContractComposition {
 
 	private final CompositionMetadataStore metadata = CompositionMetadataStore.getInstance();
@@ -786,8 +787,8 @@ public class ContractCompositionMeta extends ContractComposition {
 	 */
 	private String[] extractCompositionInformation(final String clause) {
 		final String[] result = { "", "", "", "" };
-		final Pattern p = Pattern.compile("(" + CompositionConstants.COMPOSITION_CONJUNCTIVE + "|" + CompositionConstants.COMPOSITION_CONSECUTIVE + "|" + CompositionConstants.COMPOSITION_CUMULATIVE + "|"
-				+ CompositionConstants.COMPOSITION_EXPLICIT + "|" + CompositionConstants.COMPOSITION_PLAIN + ")\\(" + "((!?[\\w]+\\(?\\)?)?(,(!?[\\w]+\\(?\\)?))*)" + "\\)");
+		final Pattern p = Pattern.compile("(" + "FM.CompositionConjunctive" + "|" + "FM.CompositionConsecutive" + "|" + "FM.CompositionCumulative" + "|"
+				+ "FM.CompositionExplicit" + "|" + "FM.CompositionPlain" + ")\\(" + "((!?[\\w]+\\(?\\)?)?(,(!?[\\w]+\\(?\\)?))*)" + "\\)");
 		final Matcher m = p.matcher(clause);
 		if (m.find()) {
 			result[0] = m.group(1);
@@ -938,6 +939,7 @@ public class ContractCompositionMeta extends ContractComposition {
 		return result;
 	}
 
+	
 	/**
 	 * adds additional selection state to disjunction of features
 	 * 
@@ -946,6 +948,7 @@ public class ContractCompositionMeta extends ContractComposition {
 	 * @return new clause with added selectionstate
 	 */
 	private String getNewReqOrOriginal(final String oldRequiresClause, final String featureState) {
+		//XXX Technically wrong because . means 'any character' in a regex. replaceAll uses regexs. To fix, use replace.
 		final String clauseBody = oldRequiresClause.replaceAll(CompositionConstants.REQUIRE_OR_ORIGINAL, "FM.FeatureModel." + featureState + " || " + CompositionConstants.REQUIRE_OR_ORIGINAL);
 		return clauseBody + ";";
 	}
