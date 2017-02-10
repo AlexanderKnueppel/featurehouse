@@ -520,8 +520,8 @@ public class ContractCompositionMeta extends ContractComposition {
 		bodyComp += explicitComposeClauses(reqClausesB, reqClausesA, terminalB, "requires", featureState, isObligatory);
 
 		bodyComp += explicitComposeClauses(ensClausesB, ensClausesA, terminalB, "ensures", featureState, isObligatory);
-
-		bodyComp = bodyComp.replace(CompositionConstants.ORIGINAL_CALL, methodName + "__wrappee__" + terminalB.getOriginalFeatureName() + "(");
+		final String wrappeeconstant = (FSTGenComposerExtension.dispMethods) ? "_" : "__wrappee__";
+		bodyComp = bodyComp.replace(CompositionConstants.ORIGINAL_CALL, methodName + wrappeeconstant + terminalB.getOriginalFeatureName() + "(");
 
 		terminalComp.setBody(bodyComp);
 	}
