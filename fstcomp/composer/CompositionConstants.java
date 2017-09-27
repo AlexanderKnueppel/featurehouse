@@ -46,6 +46,7 @@ public class CompositionConstants {
 	public static final String ORIGINAL_KEYWORD = "\\original";
 	public static final String ORIGINAL_OR = "\\or_original";
 	public static final String ORIGINAL_CALL = "original(";
+	public static final String ORIGINAL_ASSIGNABLE = "original";
 	public static final String RETURN = "return ";
 	public static final String TRUE = WS + Boolean.TRUE.toString();
 	public static final String NOT_COMPOSED = "\\not_composed";

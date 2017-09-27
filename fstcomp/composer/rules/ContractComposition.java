@@ -28,7 +28,7 @@ public class ContractComposition extends AbstractCompositionRule {
 	public boolean checkContainsOriginal(final FSTTerminal terminal) {
 		final String body = terminal.getBody();
 		return (body.contains(CompositionConstants.ORIGINAL_CASE_KEYWORD) || body.contains(CompositionConstants.ORIGINAL_SPEC_KEYWORD) || body
-				.contains(CompositionConstants.ORIGINAL_KEYWORD));
+				.contains(CompositionConstants.ORIGINAL_KEYWORD)|| body.contains(CompositionConstants.ORIGINAL_ASSIGNABLE));
 	}
 
 	@Override
@@ -303,7 +303,8 @@ public class ContractComposition extends AbstractCompositionRule {
 			}
 			for (int i = 0; i < clausesA.length; i++) {
 				if (clausesA[i].contains(CompositionConstants.ORIGINAL_KEYWORD) || clausesA[i].contains(CompositionConstants.ORIGINAL_KEYWORD_CLAUSE)
-						|| clausesA[i].contains(CompositionConstants.ORIGINAL_CASE_KEYWORD) || clausesA[i].contains(CompositionConstants.ORIGINAL_SPEC_KEYWORD)) {
+						|| clausesA[i].contains(CompositionConstants.ORIGINAL_CASE_KEYWORD) || clausesA[i].contains(CompositionConstants.ORIGINAL_SPEC_KEYWORD)
+						|| clausesA[i].contains(CompositionConstants.ORIGINAL_ASSIGNABLE)) {
 					result.append(replaceOriginal(baseCases, clausesA[i], j, clausesA[i].replaceAll("@", "").trim().split(" ")[0]).replace(";;", ";"));
 				} else {
 					// no original in this clause
@@ -374,6 +375,29 @@ public class ContractComposition extends AbstractCompositionRule {
 		}
 		final String orig_case_repl = getOriginalCaseReplacement(baseCases, caseId);
 		final String orig_spec_repl = getOriginalSpecReplacement(baseCases);
+		if(Pattern.matches("\\s*\\([([(\\w)\\.]*)(\\"+CompositionConstants.EVERYTHING+")(\\"+CompositionConstants.NOTHING+")\\s*,]*[([(\\w)\\.]*)(\\"+CompositionConstants.EVERYTHING+")(\\"+CompositionConstants.NOTHING+")]\\s*\\)\\s*",orig_repl)){
+			//removes brackets if orig_repl is for an assignable clause
+			orig_repl = orig_repl.replace("(","").replace(")","");
+		}
+		if(orig_repl.contains(CompositionConstants.NOTHING)||orig_repl.equals("true")){
+			//Comma before original has to be removed
+			return string.replaceAll(",\\s*"+CompositionConstants.ORIGINAL_ASSIGNABLE,"")
+					 .replace(CompositionConstants.ORIGINAL_KEYWORD_CLAUSE, orig_repl).replace(CompositionConstants.ORIGINAL_KEYWORD, orig_repl)
+					 .replace(CompositionConstants.ORIGINAL_SPEC_KEYWORD, orig_spec_repl).replace(CompositionConstants.ORIGINAL_CASE_KEYWORD, orig_case_repl);
+		}
+		if(orig_repl.contains(CompositionConstants.EVERYTHING)){
+			//Complete Assignable has to be everything
+			orig_repl = "";
+			return string.replaceAll(CompositionConstants.ASSIGNABLE+"\\s*\\(?[([(\\w)\\.]*)(\\"+CompositionConstants.EVERYTHING+")(\\"+CompositionConstants.NOTHING+")\\s*,]*[([(\\w)\\.]*)(\\"+CompositionConstants.EVERYTHING+")(\\"+CompositionConstants.NOTHING+")]\\s*\\)?\\s*",CompositionConstants.ASSIGNABLE+" \\"+CompositionConstants.EVERYTHING+";")
+					 .replace(CompositionConstants.ORIGINAL_KEYWORD_CLAUSE, orig_repl).replace(CompositionConstants.ORIGINAL_KEYWORD, orig_repl)
+					 .replace(CompositionConstants.ORIGINAL_SPEC_KEYWORD, orig_spec_repl).replace(CompositionConstants.ORIGINAL_CASE_KEYWORD, orig_case_repl);
+		}
+		if(!string.contains(CompositionConstants.ORIGINAL_CALL)){
+			//Necessary because current assignable original is part of original_call keyword, block can be removed if original in assignable is replaced by \original
+			return string.replace(CompositionConstants.ORIGINAL_KEYWORD_CLAUSE, orig_repl).replace(CompositionConstants.ORIGINAL_KEYWORD, orig_repl)
+					.replace(CompositionConstants.ORIGINAL_SPEC_KEYWORD, orig_spec_repl).replace(CompositionConstants.ORIGINAL_CASE_KEYWORD, orig_case_repl)
+					.replace(CompositionConstants.ORIGINAL_ASSIGNABLE, orig_repl);
+		}
 		return string.replace(CompositionConstants.ORIGINAL_KEYWORD_CLAUSE, orig_repl).replace(CompositionConstants.ORIGINAL_KEYWORD, orig_repl)
 				.replace(CompositionConstants.ORIGINAL_SPEC_KEYWORD, orig_spec_repl).replace(CompositionConstants.ORIGINAL_CASE_KEYWORD, orig_case_repl);
 	}
